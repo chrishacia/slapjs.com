@@ -1,5 +1,5 @@
 # SlapJS.com
-[http://slapjs.com](http://slapjs.com)
+[http://slapjs.com](http://slapjs.com) ***site is not currently active***
 
 [http://chrishacia.com](http://chrishacia.com)
 
@@ -75,5 +75,3 @@ Jumpstart your web development journey with SlapJS.com and transform your ideas 
 
 ## Need to know
 SASS is required to be installed locally on your machine as at a global level. This allows the sass command to be accessible to your command line.
-
-
