@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>slapjs{{#if title}} - {{title}}{{/if}}</title>
+    <link rel="stylesheet" href="/css/styles.css?v=1.0.0" />
+    {{#if meta}}
+      {{#each meta}}
+        <meta name="{{this.name}}" content="{{this.content}}" />
+      {{/each}}
+    {{/if}}
+    {{#if css}}
+      {{#each css}}
+        <link rel="stylesheet" href="{{this}}" />
+      {{/each}}
+    {{/if}}
+  </head>
+  <body>
+  {{> header }}
+  {{{body}}}
+  {{> footer }}
+
+  <script src="/js/bootstrap.min.js"></script>
+  <script src="/js/fontawesome.min.js"></script>
+  {{#if js}}
+    {{#each js}}
+      <script src="{{this}}"></script>
+    {{/each}}
+  {{/if}}
+  </body>
+</html>

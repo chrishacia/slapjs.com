@@ -1,0 +1,12 @@
+{
+  "watch": ["frontend", "server", "server.js"],
+  "ext": "js,json,ts",
+  "ignore": [
+    "src/**/*.spec.ts",
+    "src/**/*.test.ts",
+    "src/**/*.d.ts",
+    "src/**/*.spec.js",
+    "src/**/*.test.js",
+    "src/**/*.d.js"
+  ]
+}
