@@ -1,9 +1,10 @@
 # SlapJS.com
 [http://slapjs.com](http://slapjs.com)
+
 [http://chrishacia.com](http://chrishacia.com)
 
-You can find me on Discord in [https://discord.gg/btpqdGEHpq](Coder Life) as SevenSparxx
-Coder Life is a discord server I run for developers of all kinds, and at all levels. With the goal of helping one another when we are stuck or on projects as a colaboration. Join us :-)
+You can find me on Discord in [Coder Life](https://discord.gg/btpqdGEHpq) as SevenSparxx
+Coder Life is a discord server I run for developers of all kinds, and at all levels. With the goal of helping one another when we are stuck or on projects as a colaboration. Join us!
 
 ## Accelerate Your Web Development with SlapJS
 
