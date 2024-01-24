@@ -1,0 +1,6 @@
+{
+  "rules": {
+    "no-invalid-position-at-import-rule": null
+  },
+  "extends": ["stylelint-config-standard", "stylelint-config-standard-scss"]
+}

@@ -1,8 +1,14 @@
-
 @import "../../node_modules/bootstrap/scss/functions";
 
 $body-bg: #000;
 $body-color: #FFF;
+
+.centered-box-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
 
 @import "../../node_modules/bootstrap/scss/variables";
 @import "../../node_modules/bootstrap/scss/mixins";

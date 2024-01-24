@@ -1,5 +1,5 @@
 const mysql = require('mysql2');
-const logger = require('../logger');
+const {logger} = require('../logger');
 
 require('dotenv').config();
 
@@ -43,7 +43,7 @@ class Database {
 
   conn() { return this.#connection; }
 
-  static handleQueryErr(err) {
+  handleQueryErr(err) {
     let sqlErr = { code: 'DB_ERROR' };
     if (process.env.NODE_ENV === 'development') {
       // suppresed in production enviroment

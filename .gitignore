@@ -3,5 +3,5 @@ node_modules/
 yarn-error.log
 combined.log
 error.log
+public/dist/
 .vscode/
-

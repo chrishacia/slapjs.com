@@ -9,7 +9,7 @@ const { hashPassword } = require('../../utils/password.functions');
 const Creds = require('../../data/models/creds.model');
 const Users = require('../../data/models/users.model');
 const Login = require('../../data/models/login.model');
-const logger = require('../../logger');
+const { logger, invalidUseLogger } = require('../../logger');
 
 dotenv.config();
 
@@ -21,7 +21,7 @@ module.exports = function registrationHandler(req, res) {
     * when registering, check if email exists
     *
     */
-    get() {
+    async get() {
       // check if email exists
       const { email } = req.query;
       if (!email) {
@@ -57,87 +57,232 @@ module.exports = function registrationHandler(req, res) {
     *
     */
 
-    post() {
+    async post() {
       // register a new user
-      const { email, psswrd } = req.body;
-      if (!email) {
-        res.status(400).json({ data: [], error: 'EMAIL_EMPTY' });
-        return;
-      }
+      if(!validateInputs(req, res)) { return; }
 
-      if (!validator.validate(email)) {
-        res.status(400).json({ data: [], error: 'EMAIL_INVALID' });
-        return;
-      }
-
-      if (!psswrd) {
-        res.status(400).json({ data: [], error: 'PASSWORD_EMPTY' });
-        return;
-      }
-
+      const { email, password, firstName, lastName, dobMonth, dobDay, dobYear } = req.body;
       const safeEmail = xssFilters.inHTMLData(email);
-      const { score } = zxcvbn(psswrd);
-      const scoreVerb = ['Risky', 'Weak', 'Medium', 'Tough', 'Strongest'];
-      if (score < 2) {
-        res.status(400).json({ data: [], error: `PASSWORD_${scoreVerb[score].toUpperCase()}` });
-        return;
-      }
+
 
       // user exists, get existing password to compare, create session
-      const u = new Users();
-
-      u.getUserExistsByEmail(safeEmail).then((exists) => {
-        if (!exists) {
-          hashPassword(psswrd).then((saltAndHash) => {
-            const l = new Login();
-            l.createLogin({
-              create_ts: getUtcDateTime(),
-              email: safeEmail,
-              pass: saltAndHash[1],
-              salt: saltAndHash[0],
-            }).then(() => {
-              u.getUserIdByEmail(safeEmail).then((userId) => {
-                if (!userId) {
-                  res.status(400).json({ data: [], error: 'CREATE_VERIFICATION_FAILED' });
-                  return;
-                }
-
-                const c = new Creds();
-                const timestamp = getUtcDateTime();
-                const vType = 'reg';
-                const hashy = bcrypt.hashSync(`${userId}${timestamp}${vType}${process.env.SERVER_SECRET_KEY}`, 10);
-                c.createUserVerification({
-                  user_id: userId,
-                  issuedAt: timestamp,
-                  hashy,
-                  vType,
-                }).then((verification) => {
-                  // TODO: send email
-                  res.status(200).json({ data: verification, error: '' });
-                }).catch((err) => {
-                  logger.error(err);
-                  res.status(400).json({ data: [], error: 'CREATE_VERIFICATION_FAILED' });
-                });
-              }).catch((err) => {
-                logger.error(err);
-                res.status(400).json({ data: [], error: 'CREATE_LOGIN_FAILED' });
-              });
-            }).catch((err) => {
-              logger.error(err);
-              res.status(400).json({ data: [], error: 'CREATE_LOGIN_FAILED' });
-            });
-          }).catch((err) => {
-            logger.error(err);
-            res.status(400).json({ data: [], error: 'CREATE_LOGIN_FAILED' });
-          });
-        } else {
-          res.status(400).json({ data: false, error: 'USER_FOUND' });
+      try{
+        const user = new Users();
+        if(await user.getUserExistsByEmail(safeEmail)) {
+          res.status(422).json({ data: [], error: 'USER_FOUND' });
+          return;
         }
-      }).catch((err) => {
-        // error getting email
+
+        const hashedPassword = await hashPassword(password).catch((err) => {
+          logger.error(err);
+          res.status(422).json({ data: [], error: 'CREATE_LOGIN_FAILED_HASH' });
+          return;
+        });
+
+        const login = new Login();
+        await login.createLogin({
+          create_ts: getUtcDateTime(),
+          email: safeEmail,
+          pass: hashedPassword[1],
+          salt: hashedPassword[0],
+        }).catch((err) => {
+          logger.error(err);
+          res.status(422).json({ data: [], error: 'CREATE_LOGIN_FAILED_CREATION' });
+          return;
+        });
+
+        const userId = await user.getUserIdByEmail(safeEmail).catch((err) => {
+          logger.error(err);
+          res.status(422).json({ data: [], error: 'CREATE_LOGIN_FAILED_GET_USER' });
+          return;
+        });
+
+        const timestamp = getUtcDateTime();
+        const vType = 'reg';
+        const hashy = bcrypt.hashSync(`${userId}${timestamp}${vType}${process.env.SERVER_SECRET_KEY}`, 10);
+
+        const creds = new Creds();
+        await creds.createUserVerification({
+          user_id: userId,
+          issuedAt: timestamp,
+          hashy,
+          vType,
+        })
+        .then((verification) => {
+          // TODO: send email
+          res.status(200).json({ data: verification, error: '' });
+          return;
+        })
+        .catch((err) => {
+          logger.error(err);
+          res.status(422).json({ data: [], error: 'CREATE_VERIFICATION_FAILED' });
+          return;
+        });
+
+
+        await user.createUserInformation({
+          id: userId,
+          first_name: firstName,
+          last_name: lastName,
+          profile_img: '',
+          dob: `${dobYear}-${dobMonth}-${dobDay}`
+        }).catch((err) => {
+          logger.error(err);
+        });
+
+      } catch (err) {
         logger.error(err);
-        res.status(400).json({ data: [], error: 'INVALID_EMAIL' });
-      });
+        res.status(500).json({ data: [], error: 'CREATE_INFORMATION_FAILED' });
+        return;
+      }
+    },
+    put() {
+      invalidUseLogger('registrationHandler', 'PUT', req);
+      res.status(405).json({ data: [], error: 'METHOD_NOT_SUPPORTED' });
+    },
+    delete() {
+      invalidUseLogger('registrationHandler', 'DELETE', req);
+      res.status(405).json({ data: [], error: 'METHOD_NOT_SUPPORTED' });
     },
   });
 };
+
+const validateInputs = (req, res) => {
+  const { email, password, firstName, lastName, dobMonth, dobDay, dobYear } = req.body;
+  if (!email) {
+    res.status(400).json({ data: [], error: 'EMAIL_EMPTY' });
+    return false;
+  }
+
+  if(!firstName) {
+    res.status(400).json({ data: [], error: 'FIRST_NAME_EMPTY' });
+    return false;
+  } else {
+    if(firstName.length > 50) {
+      res.status(400).json({ data: [], error: 'FIRST_NAME_TOO_LONG' });
+      return false;
+    }
+    if(firstName.length < 2) {
+      res.status(400).json({ data: [], error: 'FIRST_NAME_TOO_SHORT' });
+      return false;
+    }
+    if(!/^[a-zA-Z]+$/.test(firstName)) {
+      res.status(400).json({ data: [], error: 'FIRST_NAME_INVALID' });
+      return false;
+    }
+  }
+
+  if(!lastName) {
+    res.status(400).json({ data: [], error: 'LAST_NAME_EMPTY' });
+    return false;
+  } else {
+    if(lastName.length > 50) {
+      res.status(400).json({ data: [], error: 'LAST_NAME_TOO_LONG' });
+      return false;
+    }
+    if(lastName.length < 2) {
+      res.status(400).json({ data: [], error: 'LAST_NAME_TO_SHORT' });
+      return false;
+    }
+    if(!/^[a-zA-Z]+$/.test(lastName)) {
+      res.status(400).json({ data: [], error: 'LAST_NAME_INVALID' });
+      return false;
+    }
+  }
+
+  if(!dobMonth) {
+    res.status(400).json({ data: [], error: 'DOB_MONTH_EMPTY' });
+    return false;
+  } else {
+    if(dobMonth.length > 2) {
+      res.status(400).json({ data: [], error: 'DOB_MONTH_TOO_LONG' });
+      return false;
+    }
+    if(dobMonth.length < 1) {
+      res.status(400).json({ data: [], error: 'DOB_MONTH_TOO_SHORT' });
+      return false;
+    }
+    if(!/^[0-9]+$/.test(dobMonth)) {
+      res.status(400).json({ data: [], error: 'DOB_MONTH_INVALID' });
+      return false;
+    }
+  }
+
+  if(!dobDay) {
+    res.status(400).json({ data: [], error: 'DOB_DAY_EMPTY' });
+    return false;
+  } else {
+    if(dobDay.length > 2) {
+      res.status(400).json({ data: [], error: 'DOB_DAY_TOO_LONG' });
+      return false;
+    }
+    if(dobDay.length < 1) {
+      res.status(400).json({ data: [], error: 'DOB_DAY_TOO_SHORT' });
+      return false;
+    }
+    if(!/^[0-9]+$/.test(dobDay)) {
+      res.status(400).json({ data: [], error: 'DOB_DAY_INVALID' });
+      return false;
+    }
+  }
+
+  if(!dobYear) {
+    res.status(400).json({ data: [], error: 'DOB_YEAR_EMPTY' });
+    return false;
+  } else {
+    if(dobYear.length > 4) {
+      res.status(400).json({ data: [], error: 'DOB_YEAR_TOO_LONG' });
+      return false;
+    }
+    if(dobYear.length < 4) {
+      res.status(400).json({ data: [], error: 'DOB_YEAR_TOO_SHORT' });
+      return false;
+    }
+    if(!/^[0-9]+$/.test(dobYear)) {
+      res.status(400).json({ data: [], error: 'DOB_YEAR_INVALID' });
+      return false;
+    }
+  }
+
+  if (!validator.validate(email)) {
+    res.status(400).json({ data: [], error: 'EMAIL_INVALID' });
+    return false;
+  }
+
+  if (!password) {
+    res.status(400).json({ data: [], error: 'PASSWORD_EMPTY' });
+    return false;
+  } else {
+    if(password.length > 50) {
+      res.status(400).json({ data: [], error: 'PASSWORD_TOO_LONG' });
+      return false;
+    }
+    if(password.length < 8) {
+      res.status(400).json({ data: [], error: 'PASSWORD_TOO_SHORT' });
+      return false;
+    }
+
+    /**
+     * Password Requirements:
+     * At least one uppercase letter.
+     * At least one lowercase letter.
+     * At least one special character that is safe for the web.
+     * A minimum length of 12 characters.
+     * No character should repeat more than three times consecutively.
+     */
+    // eslint-disable-next-line no-useless-escape
+    if(!/^(?!.*(.)\1{3})(?=.*[a-z])(?=.*[A-Z])(?=.*[\d!@#$%^&*()_+{}\[\]:;"'<>,.?\/~`|-]).{12,}$/.test(password)) {
+      res.status(400).json({ data: [], error: 'PASSWORD_INVALID' });
+      return false;
+    }
+  }
+
+  const { score } = zxcvbn(password);
+  const scoreVerb = ['Risky', 'Weak', 'Medium', 'Tough', 'Strongest'];
+  if (score < 2) {
+    res.status(400).json({ data: [], error: `PASSWORD_${scoreVerb[score].toUpperCase()}` });
+    return false;
+  }
+
+  return true;
+}

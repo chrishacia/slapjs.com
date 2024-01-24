@@ -1,19 +1,36 @@
 {
-    "env": {
-        "browser": true,
-        "es2021": true,
-        "node": true,
-        "jest": true,
-        "es6": true
-    },
-    "extends": "airbnb",
-    "parserOptions": {
-        "ecmaVersion": "latest",
-        "sourceType": "module"
-    },
-    "plugins": ["import"],
-    "ignorePatterns": ["node_modules/", "build/", "*.min.js"],
-    "rules": {
-      "global-require": "off"
-    }
+  "env": {
+      "browser": true,
+      "es2021": true,
+      "node": true,
+      "jest": true,
+      "es6": true
+  },
+  "extends": [
+    "eslint:recommended",
+    "plugin:react/recommended"
+  ],
+  "parserOptions": {
+      "ecmaVersion": "latest",
+      "sourceType": "module",
+      "ecmaFeatures": {
+          "jsx": true
+      }
+  },
+  "plugins": ["import", "jsx-a11y", "react", "react-hooks"],
+  "ignorePatterns": ["node_modules/", "build/", "*.min.js"],
+  "rules": {
+    "react/jsx-uses-react": "error",
+    "react/jsx-uses-vars": "error",
+    "react/react-in-jsx-scope": "off",
+    "global-require": "off",
+    "import/no-extraneous-dependencies": [
+      "error",
+      {
+        "optionalDependencies": false,
+        "peerDependencies": false,
+        "devDependencies": false
+      }
+    ]
+  }
 }
