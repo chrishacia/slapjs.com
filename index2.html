@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Index 2</title>
+    <style>
+      .wrapper{
+        display: flex;
+        flex-direction: row;
+        height: 100vh;
+        width: 100%;
+      }
+
+      .col {
+        flex-grow: 4;
+      }
+
+      .col1 {
+        background-color: blanchedalmond;
+      }
+
+      .col2 {
+        background-color: blue;
+      }
+
+      .col3 {
+        background-color: green;
+      }
+    </style>
+</head>
+  <body>
+    <div class="wrapper">
+      <div class="col col1">
+        Left
+        <br />
+        <span id="count1">0</span>
+      </div>
+      <div class="col col2">
+        Center
+        <br />
+        <span id="count2">0</span>
+      </div>
+      <div class="col col3">
+        Right
+        <br />
+        <span id="count3">0</span>
+      </div>
+    </div>
+
+    <script type="text/javascript">
+      const cols = document.querySelectorAll('.col');
+
+      cols.forEach((col, index) => {
+        col.addEventListener('click', () => {
+          const count = document.getElementById(`count${index + 1}`);
+          count.innerHTML = parseInt(count.innerHTML) + 1;
+        });
+      });
+    </script>
+  </body>
+</html>

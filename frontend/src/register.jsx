@@ -15,7 +15,6 @@ function Register() {
   const [dobDay, setDobDay] = useState('');
   const [dobYear, setDobYear] = useState('');
 
-
   const days = Array.from(Array(31).keys()).map((i) => i + 1);
   const months = Array.from(Array(12).keys()).map((i) => i + 1);
   const currentYear = new Date().getFullYear();
@@ -166,7 +165,7 @@ function Register() {
           <label htmlFor="floatingConfirmPassword">Confirm Password</label>
         </div>
 
-        <button className="btn btn-primary w-100 py-2" type="submit">Sign in</button>
+        <button className="btn btn-primary w-100 py-2" type="submit">Sign up</button>
         <hr className="my-4" />
         <a href="/login" className="btn btn-outline-primary w-100 py-2 mt-2">Login</a>
         <p className="mt-5 mb-3 text-body-secondary text-center">&copy; { new Date().getFullYear() }</p>

@@ -43,6 +43,9 @@ router.get('/home', (req, res) => { res.render('home', { title: 'Home Page' }); 
 router.get('/login', isLoggedIn, (req, res) => { res.render('react', { layout: 'react', title: 'Login', js: ['/dist/login.bundle.js'] }); });
 router.get('/logout', (req, res) => { res.render('react', { layout: 'react', title: 'Login', js: ['/dist/logout.bundle.js'] }); });
 router.get('/register', isLoggedIn, (req, res) => { res.render('react', { layout: 'react', title: 'Sign Up', js: ['/dist/register.bundle.js'] }); });
+router.get('/register-verify', isLoggedIn, (req, res) => { res.render('react', { layout: 'react', title: 'Activate Account', js: ['/dist/register-verify.bundle.js'] }); });
+router.get('/forgot-password', isLoggedIn, (req, res) => { res.render('react', { layout: 'react', title: 'Forgot Password', js: ['/dist/forgot-password.bundle.js'] }); });
+router.get('/forgot-verify', isLoggedIn, (req, res) => { res.render('react', { layout: 'react', title: 'Verify Identity', js: ['/dist/forgot-verify.bundle.js'] }); });
 
 // Private routes
 router.get('/dashboard', isNotLoggedIn, (req, res) => { res.render('react', { layout: 'react', title: 'Sign Up', js: ['/dist/dashboard.bundle.js'] }); });
