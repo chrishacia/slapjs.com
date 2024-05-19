@@ -1,22 +1,14 @@
-const restful = require('../../helpers/restful');
-const { logger, invalidUseLogger } = require('../../logger');
+const {invalidMethodHandler, restful} = require('../../helpers/index');
 
-module.exports = function forgotPwPt2Handler(req, res) {
-  restful(req, res, {
-    get() {
-      invalidUseLogger('forgotPwPt2Handler', 'GET', req);
-      res.status(405).json({ data: [], error: 'METHOD_NOT_SUPPORTED' });
-    },
-    put() {
-      invalidUseLogger('forgotPwPt2Handler', 'PUT', req);
-      res.status(405).json({ data: [], error: 'METHOD_NOT_SUPPORTED' });
-    },
-    delete() {
-      invalidUseLogger('forgotPwPt2Handler', 'DELETE', req);
-      res.status(405).json({ data: [], error: 'METHOD_NOT_SUPPORTED' });
-    },
-    post() {
-      logger.info('forgotPwPt2Handler', 'POST', null);
-    },
-  });
+// const handleForgotPassword2 = async (req, res) => {
+//     return null;
+// }
+
+module.exports = function loginHandler(req, res) {
+    restful(req, res, {
+        post: invalidMethodHandler(res, 'POST_LOGIN_HANDLER'),
+        get: invalidMethodHandler(res, 'GET_LOGIN_HANDLER'),
+        put: invalidMethodHandler(res, 'PUT_LOGIN_HANDLER'),
+        delete: invalidMethodHandler(res, 'DELETE_LOGIN_HANDLER')
+    });
 };

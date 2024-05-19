@@ -1,42 +1,73 @@
-const restful = (req, res, handlers) => {
-  //
-  // This shortcut function responses with HTTP 405
-  // to the requests having a method that does not
-  // have corresponding request handler. For example
-  // if a resource allows only GET and POST requests
-  // then PUT, DELETE, etc requests will be responsed
-  // with the 405. HTTP 405 is required to have Allow
-  // header set to a list of allowed methods so in
-  // this case the response has "Allow: GET, POST" in
-  // its headers [1].
-  //
-  // Example usage
-  //
-  //     A handler that allows only GET requests and returns
-  //
-  //     exports.myrestfulhandler = function (req, res) {
-  //         restful(req, res, {
-  //             get: function (req, res) {
-  //                 res.send(200, 'Hello restful world.');
-  //             }
-  //         });
-  //     }
-  //
-  // References
-  //
-  //     [1] RFC-2616, 10.4.6 405 Method Not Allowed
-  //     https://tools.ietf.org/html/rfc2616#page-66
-  //
-  //     [2] Express.js request method
-  //     http://expressjs.com/api.html#req.route
-  //
-  const method = (req.method || '').toLowerCase(); // [2]
-  if (!(method in handlers)) {
-    res.set('Allow', Object.keys(handlers).join(', ').toUpperCase());
-    res.sendStatus(405);
-  } else {
-    handlers[method](req, res);
-  }
-};
+import { logger } from '../logger';
+import { responseHandler } from './restful.response';
+/**
+ * References:
+ * - RFC-2616, 10.4.6 405 Method Not Allowed: https://tools.ietf.org/html/rfc2616#page-66
+ * - Express.js Request Method Documentation: http://expressjs.com/en/5x/api.html#req.method
+ */
 
+const restful = async (req, res, handlers) => {
+    const method = (req.method || '').toLowerCase();
+
+    // Log each access
+    logger.log(`Access Log: ${req.method} ${req.originalUrl}`);
+
+    // Check if the method is supported
+    if (!(method in handlers)) {
+        res.set('Allow', Object.keys(handlers).join(', ').toUpperCase());
+        res.sendStatus(405);
+        logger.error(`Error Log: Method ${req.method} not allowed for ${req.originalUrl}`);
+        return;
+    }
+
+    const { handler, middleware = [] } = handlers[method];
+
+    // Function to execute middleware in sequence
+    const executeMiddleware = async (index) => {
+        if (index < middleware.length) {
+            try {
+                await middleware[index](req, res, (err) => {
+                    if (err) {
+                        throw err;
+                    }
+                    executeMiddleware(index + 1);
+                });
+            } catch (err) {
+                logger.error(`Error Log: Middleware error on ${req.method} ${req.originalUrl} - ${err.message}`);
+
+                responseHandler(res,
+                    {
+                        data: [],
+                        error: err.message || 'Internal Server Error: Middleware Error',
+                        status: err.status || 500,
+                        method: req.method,
+                        responseHandler: 'executeMiddleware',
+                    })
+            }
+        } else {
+            // All middleware executed successfully, proceed to handler
+            executeHandler();
+        }
+    };
+
+    // Function to execute the main handler
+    const executeHandler = async () => {
+        try {
+            await handler(req, res);
+        } catch (err) {
+            logger.error(`Error Log: Handler error on ${req.method} ${req.originalUrl} - ${err.message}`);
+            responseHandler(res,
+                {
+                    data: [],
+                    error: err.message || 'Internal Server Error: Handler Error',
+                    status: err.status || 500,
+                    method: req.method,
+                    responseHandler: 'executeHandler',
+                })
+        }
+    };
+
+    // Start the middleware chain
+    executeMiddleware(0);
+};
 module.exports = restful;

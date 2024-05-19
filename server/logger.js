@@ -31,7 +31,7 @@ const invalidUseLogger = (routeHandlerName, routeHandlerMethod, req) => {
   logger.error(message);
 };
 
-if (process.env.NODE_ENV !== 'production') {
+if (process.env.SERVER_ENV !== 'production') {
   logger.add(new winston.transports.Console({
     format: winston.format.simple(),
   }));
