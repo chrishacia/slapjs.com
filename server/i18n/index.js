@@ -1,5 +1,5 @@
-import en from './translations.en';
-import es from './translations.es';
+const en = require('./translations.en');
+const es = require('./translations.es');
 
 module.exports = {
     en,

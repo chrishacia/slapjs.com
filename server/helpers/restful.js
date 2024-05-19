@@ -1,5 +1,5 @@
-import { logger } from '../logger';
-import { responseHandler } from './restful.response';
+const { logger } = require('../logger');
+const { responseHandler } = require('./restful.response');
 /**
  * References:
  * - RFC-2616, 10.4.6 405 Method Not Allowed: https://tools.ietf.org/html/rfc2616#page-66

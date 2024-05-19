@@ -1,12 +1,12 @@
-import { getJwtTokenDetails, generateJwtToken, verifyJwtToken } from './jwt.functions';
-import {
+const { getJwtTokenDetails, generateJwtToken, verifyJwtToken } = require('./jwt.functions');
+const {
     checkStrengthScore,
     checkStrengthValue,
     hashPassword,
     validatePasswordRequirements,
     verifyPassword,
-} from './password.functions';
-import { getUtcDateTime } from '../../shared/utils/date.functions';
+} = require('./password.functions');
+const { getUtcDateTime } = require('../../shared/utils/date.functions');
 
 module.exports = {
     getJwtTokenDetails,

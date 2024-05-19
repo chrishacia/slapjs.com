@@ -1,6 +1,6 @@
-import {invalidMethodHandler, responseHandler} from './restful.response';
-import restful from './restful';
-import translations from './translations';
+const {invalidMethodHandler, responseHandler} = require('./restful.response');
+const restful = require('./restful');
+const translations = require('./translations');
 
 module.exports = {
     invalidMethodHandler,

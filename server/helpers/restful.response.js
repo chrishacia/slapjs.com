@@ -1,7 +1,7 @@
-import { invalidUseLogger } from '../logger';
-import { translations } from '../helpers/index';
+const { invalidUseLogger } = require('../logger');
+const { translations } = require('../helpers/index');
 
-export const responseHandler = (res, data = {
+const responseHandler = (res, data = {
     data: [],
     error: '',
     status: 200,
@@ -16,7 +16,12 @@ export const responseHandler = (res, data = {
     res.status(status).json({ data: responseData, error });
 }
 
-export const invalidMethodHandler = (req, res, handler) => {
+const invalidMethodHandler = (req, res, handler) => {
     invalidUseLogger(handler, req.method, req);
     res.status(405).json({ data: [], error: translations('en', 'METHOD_NOT_SUPPORTED') });
 };
+
+module.exports = {
+    invalidMethodHandler,
+    responseHandler,
+}
