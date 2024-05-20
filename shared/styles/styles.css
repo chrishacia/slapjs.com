@@ -6,6 +6,24 @@
   height: 100vh;
 }
 
+.centered-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  font-size: 30px; /* Large text */
+  font-weight: bold; /* Bold text */
+  width: 80%; /* Width of the container */
+  height: 50%; /* Height of the container */
+  margin: auto;
+  position: absolute;
+  top: 0;
+  bottom: 0; /* These four lines are used for */
+  left: 0;
+  right: 0; /* centering the div */
+  padding: 20px; /* Space between text and border */
+}
+
 /*!
  * Bootstrap  v5.3.2 (https://getbootstrap.com/)
  * Copyright 2011-2023 The Bootstrap Authors
@@ -87,8 +105,8 @@
   --bs-body-line-height: 1.5;
   --bs-body-color: #000;
   --bs-body-color-rgb: 0, 0, 0;
-  --bs-body-bg: #FFF;
-  --bs-body-bg-rgb: 255, 255, 255;
+  --bs-body-bg: #F7FCFB;
+  --bs-body-bg-rgb: 247, 252, 251;
   --bs-emphasis-color: #000;
   --bs-emphasis-color-rgb: 0, 0, 0;
   --bs-secondary-color: rgba(0, 0, 0, 0.75);
@@ -2463,10 +2481,10 @@ textarea.form-control-lg {
   outline: 0;
 }
 .form-range:focus::-webkit-slider-thumb {
-  box-shadow: 0 0 0 1px #FFF, 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+  box-shadow: 0 0 0 1px #F7FCFB, 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
 }
 .form-range:focus::-moz-range-thumb {
-  box-shadow: 0 0 0 1px #FFF, 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+  box-shadow: 0 0 0 1px #F7FCFB, 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
 }
 .form-range::-moz-focus-outer {
   border: 0;

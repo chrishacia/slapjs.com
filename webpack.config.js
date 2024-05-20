@@ -7,7 +7,7 @@ const dotenv = require('dotenv');
 dotenv.config();
 
 // Define your source directory and output directory
-const sourceDirectory = path.resolve(__dirname, 'frontend/src');
+const sourceDirectory = path.resolve(__dirname, 'frontend/src/pages');
 const outputDirectory = path.resolve(__dirname, 'public/dist');
 
 // Function to scan the source directory for entry points

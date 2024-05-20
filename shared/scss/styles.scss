@@ -1,6 +1,6 @@
 @import "../../node_modules/bootstrap/scss/functions";
 
-$body-bg: #FFF;
+$body-bg: #F7FCFB;
 $body-color: #000;
 
 .centered-box-container {
@@ -9,6 +9,21 @@ $body-color: #000;
   align-items: center;
   height: 100vh;
 }
+
+.centered-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    font-size: 30px; /* Large text */
+    font-weight: bold; /* Bold text */
+    width: 80%; /* Width of the container */
+    height: 50%; /* Height of the container */
+    margin: auto;
+    position: absolute;
+    inset: 0; /* These four lines are used for */ /* centering the div */
+    padding: 20px; /* Space between text and border */
+  }
 
 @import "../../node_modules/bootstrap/scss/variables";
 @import "../../node_modules/bootstrap/scss/mixins";
