@@ -1,4 +1,4 @@
-const translations = (lang, key) => {
+export const translations = (lang, key) => {
     if (!lang) {
         lang = 'en';
     }
@@ -11,5 +11,3 @@ const translations = (lang, key) => {
     const translations = require(translationPath);
     return translations[key];
 }
-
-module.exports = translations;

@@ -1,14 +1,16 @@
-const YAML = require('yamljs');
-const express = require('express');
-const path = require('path');
-const routes = require('./routes/index');
-const swaggerUi = require('swagger-ui-express');
+import YAML from 'yamljs';
+import express from 'express';
+import path from 'path';
+import routes from './routes/index';
+import swaggerUi from 'swagger-ui-express';
+import { Request, Response, NextFunction } from 'express';
+import { RequestWithSession } from './types/server-sessions';
 
 const router = express.Router();
 
 const swaggerDocument = YAML.load(path.resolve(__dirname, './swagger.yaml'));
 
-const isNotLoggedIn = (req, res, next) => {
+const isNotLoggedIn = (req: RequestWithSession, res: Response, next: NextFunction) => {
   if (!req.session.userId) {
     res.redirect('/login');
   } else {
@@ -16,7 +18,7 @@ const isNotLoggedIn = (req, res, next) => {
   }
 };
 
-const isLoggedIn = (req, res, next) => {
+const isLoggedIn = (req: RequestWithSession, res: Response, next: NextFunction) => {
   if (req.session.userId) {
     res.redirect('/dashboard');
   } else {
@@ -53,4 +55,4 @@ router.get('/dashboard', isNotLoggedIn, (req, res) => { res.render('react', { la
 // catch-all route
 router.get('*', (req, res) => { res.sendFile(path.join(__dirname, '..', 'public', 'index.html')); });
 
-module.exports = router;
+export default router;

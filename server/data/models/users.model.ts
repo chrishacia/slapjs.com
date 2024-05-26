@@ -3,7 +3,7 @@
 const Database = require('../database');
 const { logger } = require('../../logger');
 
-class Users {
+export default class Users {
     #db;
 
     // tables
@@ -19,7 +19,7 @@ class Users {
         await this.#db.close();
     }
 
-    async getUserExistsByEmail(email) {
+    async getUserExistsByEmail(email: string): Promise<boolean> {
         try {
             const sql = `SELECT * FROM ${this.#login_table} WHERE email = ? limit 1`;
             const results = await this.#db.query(sql, [email]);
@@ -33,7 +33,7 @@ class Users {
         }
     }
 
-    async getUserExistsById(id) {
+    async getUserExistsById(id: number): Promise<boolean> {
         try {
             const sql = `SELECT * FROM ${this.#login_table} WHERE id = ? limit 1`;
             const results = await this.#db.query(sql, [id]);
@@ -47,21 +47,21 @@ class Users {
         }
     }
 
-    async getUserInformationById(id) {
+    async getUserInformationById(id: number): Promise<any[]> {
         try {
             const sql = `SELECT * FROM ${this.#user_info} WHERE user_id = ? limit 1`;
             const results = await this.#db.query(sql, [id]);
             if (results.length > 0) {
                 return results[0];
             }
-            return false;
+            return [];
         } catch (err) {
             logger.error(err);
             throw err;
         }
     }
 
-    async getUserInformationByEmail(email) {
+    async getUserInformationByEmail(email: string): Promise<any[]> {
         try {
             const sql = `SELECT * FROM ${this.#login_table} l JOIN ${this.#user_info} u on l.id = u.user_id WHERE l.email = ? limit 1`;
             const results = await this.#db.query(sql, [email]);
@@ -75,29 +75,35 @@ class Users {
         }
     }
 
-    async getUserIdByEmail(email) {
+    async getUserIdByEmail(email: string): Promise<number> {
         try {
             const sql = `SELECT id FROM ${this.#login_table} WHERE email = ? limit 1`;
             const results = await this.#db.query(sql, [email]);
-            return results[0].id || false;
+            return results[0].id || 0;
         } catch (err) {
             logger.error(err);
             throw err;
         }
     }
 
-    async getUserEmailById(id) {
+    async getUserEmailById(id: number): Promise<string> {
         try {
             const sql = `SELECT email FROM ${this.#login_table} WHERE id = ? limit 1`;
             const results = await this.#db.query(sql, [id]);
-            return results[0].email || false;
+            return results[0].email || '';
         } catch (err) {
             logger.error(err);
             throw err;
         }
     }
 
-    async createUserInformation(data) {
+    async createUserInformation(
+        data: {
+            id: number;
+            name: string;
+            profile_img: string;
+            dob: string;
+        }): Promise<any[]> {
         try {
             const sql = `INSERT INTO ${this.#user_info} (user_id, name, profile_img, dob)`;
             const values = `VALUES ('${data.id}', '${data.name}', '${data.profile_img}', ${data.dob})`;
@@ -109,7 +115,14 @@ class Users {
         }
     }
 
-    async updateUserInformation(data) {
+    async updateUserInformation(
+        data: {
+            userId: number;
+            name: string;
+            dob: string;
+            postalCode: string;
+
+        }): Promise<any[]> {
         try {
             const sql = `UPDATE ${this.#user_info} SET name = ?, dob = ?, postalCode = ? WHERE user_id = ${data.userId}`;
             const results = await this.#db.query(sql, [
@@ -126,7 +139,7 @@ class Users {
         }
     }
 
-    async updateUserProfilePic(userId, profile_img) {
+    async updateUserProfilePic(userId: number, profile_img: string): Promise<boolean> {
         try {
             const sql = `UPDATE ${this.#user_info} SET profile_img = ? WHERE user_id = ?`;
             const results = await this.#db.query(sql, [profile_img, userId]);
@@ -138,5 +151,3 @@ class Users {
         }
     }
 }
-
-module.exports = Users;

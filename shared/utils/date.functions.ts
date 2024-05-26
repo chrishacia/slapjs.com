@@ -1,4 +1,4 @@
-const getMySqlFormatedDate = (date) => {
+const getMySqlFormatedDate = (date: Date) => {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0'); // months are zero-based
   const day = String(date.getDate()).padStart(2, '0');
@@ -11,7 +11,7 @@ const getMySqlFormatedDate = (date) => {
 
 const getUtcDateTime = () => getMySqlFormatedDate(new Date());
 
-const convertLocalTimeToUtc = (localTimeString, timezoneOffset) => {
+const convertLocalTimeToUtc = (localTimeString: string, timezoneOffset: number) => {
   // Create a date object from the local time string
   const localTime = new Date(localTimeString);
 
@@ -25,7 +25,7 @@ const convertLocalTimeToUtc = (localTimeString, timezoneOffset) => {
   return getMySqlFormatedDate(utcTime);
 };
 
-module.exports = {
+export {
   getUtcDateTime,
   convertLocalTimeToUtc,
 };

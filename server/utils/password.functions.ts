@@ -1,8 +1,8 @@
-const bcrypt = require('bcryptjs');
-const logger = require('../logger');
-const zxcvbn = require('zxcvbn');
+import bcrypt from 'bcryptjs';
+import { logger } from '../logger';
+import zxcvbn, {ZXCVBNResult} from 'zxcvbn';
 
-const hashPassword = async (plainTextPassword) => {
+const hashPassword = async (plainTextPassword: string): Promise<[string, string]> => {
   try {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(plainTextPassword, salt);
@@ -14,7 +14,7 @@ const hashPassword = async (plainTextPassword) => {
   }
 };
 
-const verifyPassword = async (plainTextPassword, salt, hashedPassword) => {
+const verifyPassword = async (plainTextPassword: string, salt: string, hashedPassword: string): Promise<boolean> => {
   try {
     const hashedPasswordToCompare = await bcrypt.hash(plainTextPassword, salt);
     return hashedPassword === hashedPasswordToCompare;
@@ -24,11 +24,11 @@ const verifyPassword = async (plainTextPassword, salt, hashedPassword) => {
   }
 };
 
-const checkStrengthScore = (password) => {
+const checkStrengthScore = (password: string): ZXCVBNResult => {
   return zxcvbn(password);
 }
 
-const checkStrengthValue = (password) => {
+const checkStrengthValue = (password: string): string => {
   const { score } = checkStrengthScore(password);
   const scoreVerb = ['Risky', 'Weak', 'Medium', 'Tough', 'Strongest'];
   return `PASSWORD_${scoreVerb[score].toUpperCase()}`;
@@ -42,12 +42,12 @@ const checkStrengthValue = (password) => {
  * A minimum length of 12 characters.
  * No character should repeat more than three times consecutively.
  */
-const validatePasswordRequirements = (password) => {
+const validatePasswordRequirements = (password: string): boolean => {
   // eslint-disable-next-line no-useless-escape
   return !/^(?!.*(.)\1{3})(?=.*[a-z])(?=.*[A-Z])(?=.*[\d!@#$%^&*()_+{}\[\]:;"'<>,.?\/~`|-]).{12,}$/.test(password);
 }
 
-module.exports = {
+export {
   checkStrengthScore,
   checkStrengthValue,
   hashPassword,

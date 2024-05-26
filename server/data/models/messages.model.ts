@@ -1,7 +1,7 @@
 const Database = require('../database');
 const { logger } = require('../../logger');
 
-class Messages {
+export default class Messages {
     #db;
 
     // tables
@@ -13,11 +13,11 @@ class Messages {
         this.#db = new Database();
     }
 
-    async closeConnection() {
+    async closeConnection(): Promise<void> {
         await this.#db.close();
     }
 
-    async getMessagesByUserId(userId = 0, mailboxType = 'inbox', sort = 'DESC') {
+    async getMessagesByUserId(userId: number = 0, mailboxType: string = 'inbox', sort: string = 'DESC'): Promise<any[]> {
         try {
             const sql = `
             SELECT
@@ -55,7 +55,7 @@ class Messages {
         }
     }
 
-    async getMessagesByUUID(msgChainId = '', getDeleted = false) {
+    async getMessagesByUUID(msgChainId: string = '', getDeleted: boolean = false): Promise<any[]> {
         try {
             const sql = `
             SELECT
@@ -86,7 +86,7 @@ class Messages {
         }
     }
 
-    async getAllMessagesInChain(msgChainId = '', getDeleted = false) {
+    async getAllMessagesInChain(msgChainId: string = '', getDeleted: boolean = false): Promise<any[]> {
         try {
             const sql = `
             SELECT
@@ -114,7 +114,14 @@ class Messages {
         }
     }
 
-    async createMessageEntry(senderUserId = 0, recipientUserId = 0, subject= '', message = '', chainId = '', metadata = {}) {
+    async createMessageEntry(
+        senderUserId: number = 0,
+        recipientUserId: number = 0,
+        subject: string = '',
+        message: string = '',
+        chainId: string = '',
+        metadata: string = ''
+    ): Promise<string[]> {
         try {
             const sql = `
             INSERT INTO ${this.#messages}
@@ -132,7 +139,7 @@ class Messages {
         }
     }
 
-    async getMsgChainIdByUUID(msgUUID = '') {
+    async getMsgChainIdByUUID(msgUUID: string = ''): Promise<any[]> {
         try {
             const sql = `
             SELECT
@@ -150,7 +157,7 @@ class Messages {
         }
     }
 
-    async getMsgChainUUIDByMessageId(messageId = 0) {
+    async getMsgChainUUIDByMessageId(messageId: number = 0): Promise<any[]> {
         try {
             const sql = `
             SELECT
@@ -168,7 +175,14 @@ class Messages {
         }
     }
 
-    async createMessageReplyEntry(messageData = {}) {
+    async createMessageReplyEntry(
+        messageData: {
+            originalMessageId: number;
+            replyMessageId: number;
+        } = {
+            originalMessageId: 0,
+            replyMessageId: 0
+        }): Promise<number> {
         try {
             const sql = `
             INSERT INTO ${this.#replies}
@@ -177,7 +191,7 @@ class Messages {
                 (${messageData.originalMessageId}, ${messageData.replyMessageId})
             `;
             const results = await this.#db.query(sql);
-            if(results.affectedRows === 0){
+            if (results.affectedRows === 0) {
                 return 0;
             }
             return results.insertId;
@@ -187,7 +201,7 @@ class Messages {
         }
     }
 
-    async deleteMessageById(messageId = 0) {
+    async deleteMessageById(messageId: number = 0): Promise<boolean> {
         try {
             const sql = `
             UPDATE ${this.#messages}
@@ -195,7 +209,7 @@ class Messages {
             WHERE id = ${messageId}
             `;
             const results = await this.#db.query(sql);
-            if(results.affectedRows === 0){
+            if (results.affectedRows === 0) {
                 return false;
             }
 
@@ -206,7 +220,7 @@ class Messages {
         }
     }
 
-    async setMessageAsRead(messageId = 0) {
+    async setMessageAsRead(messageId: number = 0): Promise<boolean> {
         try {
             const sql = `
             UPDATE ${this.#messages}
@@ -214,7 +228,7 @@ class Messages {
             WHERE id = ${messageId}
             `;
             const results = await this.#db.query(sql);
-            if(results.affectedRows === 0){
+            if (results.affectedRows === 0) {
                 return false;
             }
 
@@ -225,7 +239,7 @@ class Messages {
         }
     }
 
-    async getCounts(userId = 0) {
+    async getCounts(userId: number = 0): Promise<any[]> {
         try {
             const sql = `
             SELECT
@@ -244,5 +258,3 @@ class Messages {
         }
     }
 }
-
-module.exports = Messages;

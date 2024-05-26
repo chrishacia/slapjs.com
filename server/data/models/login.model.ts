@@ -1,7 +1,7 @@
 const Database = require('../database');
 const logger = require('../../logger');
 
-class Login {
+export default class Login {
     #db;
 
     #table = 'login';
@@ -10,7 +10,7 @@ class Login {
         this.#db = new Database();
     }
 
-    async getPassDetailsForComparison(email) {
+    async getPassDetailsForComparison(email: string): Promise<any[]> {
         try {
             const sql = `SELECT pass, salt FROM ${this.#table} WHERE email = ? limit 1`;
             const results = await this.#db.query(sql, [email]);
@@ -26,7 +26,13 @@ class Login {
         }
     }
 
-    async createLogin(data) {
+    async createLogin(data: {
+        create_ts: string;
+        email: string;
+        pass: string;
+        salt: string;
+    }
+    ): Promise<number> {
         try {
             const sql = `insert into ${this.#table} (create_ts, email, pass, salt, status, verified)`;
             const values = `values ('${data.create_ts}', '${data.email}', '${data.pass}', '${data.salt}', 0, 0)`;
@@ -38,9 +44,7 @@ class Login {
         }
     }
 
-    async closeConnection() {
+    async closeConnection(): Promise<void> {
         await this.#db.close();
     }
 }
-
-module.exports = Login;

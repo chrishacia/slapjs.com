@@ -2,8 +2,9 @@ const {restful, invalidMethodHandler} = require ('../../helpers');
 const { logger } = require('../../logger');
 const { JwtModel } = require('../../data');
 const { verifyJwtToken, generateJwtToken, getUtcDateTime } = require('../../utils');
+import { Request, Response } from 'express';
 
-const handleJWTRefresh = async (req, res) => {
+const handleJWTRefresh = async (req: Request, res: Response) => {
     try {
         const { refreshToken, userId } = req.body;
 
@@ -47,19 +48,19 @@ const handleJWTRefresh = async (req, res) => {
     }
 }
 
-module.exports = function jwtRefreshHandler(req, res) {
+export default function jwtRefreshHandler(req: Request, res: Response) {
     restful(req, res, {
         post: {
             handler: handleJWTRefresh
         },
         get: {
-            handler: (req, res) => invalidMethodHandler(req, res, 'GET_JWTREFRESH_HANDLER')
+            handler: (req: Request, res: Response) => invalidMethodHandler(req, res, 'GET_JWTREFRESH_HANDLER')
         },
         put: {
-            handler: (req, res) => invalidMethodHandler(req, res, 'PUT_JWTREFRESH_HANDLER')
+            handler: (req: Request, res: Response) => invalidMethodHandler(req, res, 'PUT_JWTREFRESH_HANDLER')
         },
         delete: {
-            handler: (req, res) => invalidMethodHandler(req, res, 'DELETE_JWTREFRESH_HANDLER')
+            handler: (req: Request, res: Response) => invalidMethodHandler(req, res, 'DELETE_JWTREFRESH_HANDLER')
         }
     });
 };

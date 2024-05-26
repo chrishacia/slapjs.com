@@ -7,27 +7,28 @@ const { engine } = require('express-handlebars');
 const session = require('express-session');
 const path = require('path');
 const routes = require('./server/routes');
+import { Request, Express } from 'express';
+import Cors from 'cors';
 
 dotenv.config();
-const app = express();
+const app: Express = express();
 
 const PORT = process.env.SERVER_PORT;
 
-// CORS whitelist
-const whitelist = process.env.SERVER_WHITELIST.split(',');
-const domainExistsOnWhitelist = (req) => whitelist.indexOf(req.header('Origin')) !== -1;
+const whitelist = (process.env.SERVER_WHITELIST ?? '').split(',');
+const domainExistsOnWhitelist = (req: Request) => whitelist.indexOf(req.header('Origin') as string) !== -1;
 
 // enable CORS
-const corsOptionsDelegate = (req, callback) => {
-  let corsOptions;
-  if (domainExistsOnWhitelist(req)) {
-    // Enable CORS for this request
-    corsOptions = { origin: true };
-  } else {
-    // Disable CORS for this request
-    corsOptions = { origin: false };
-  }
-  callback(null, corsOptions);
+const corsOptionsDelegate = (req: Request, callback: (error: any, options: Cors.CorsOptions) => void) => {
+    let corsOptions;
+    if (domainExistsOnWhitelist(req)) {
+        // Enable CORS for this request
+        corsOptions = { origin: true };
+    } else {
+        // Disable CORS for this request
+        corsOptions = { origin: false };
+    }
+    callback(null, corsOptions);
 };
 
 // Express configuration

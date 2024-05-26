@@ -1,5 +1,6 @@
 const winston = require('winston');
 const dotenv = require('dotenv');
+import { Request } from 'express';
 
 dotenv.config();
 
@@ -21,7 +22,7 @@ const logger = winston.createLogger({
   ],
 });
 
-const invalidUseLogger = (routeHandlerName, routeHandlerMethod, req) => {
+const invalidUseLogger = (routeHandlerName: string, routeHandlerMethod: string, req: Request) => {
   const { userId } = req.body ? req.body : 'Undetected';
   const clientIp = req.ip || req.connection.remoteAddress; // IP of the client
   const userAgent = req.get('User-Agent'); // User agent of the client
@@ -37,7 +38,7 @@ if (process.env.SERVER_ENV !== 'production') {
   }));
 }
 
-module.exports = {
+export {
   logger,
   invalidUseLogger,
 };

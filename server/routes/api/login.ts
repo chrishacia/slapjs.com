@@ -1,11 +1,13 @@
-const validator = require('email-validator');
-const xssFilters = require('xss-filters');
+import { Request, Response } from 'express';
+import { RequestWithSession } from '../../types/server-sessions';
 
-const restful = require('../../helpers/restful');
-const { invalidMethodHandler } = require('../../helpers/restful.response');
-const { logger } = require('../../logger');
-const { Login, Users } = require('../../data/index');
-const { verifyPassword, generateJwtToken, getUtcDateTime } = require('../../utils/index');
+import validator from 'email-validator';
+import xssFilters from 'xss-filters';
+
+import { restful, invalidMethodHandler } from '../../helpers/index';
+import { logger } from '../../logger';
+import { Login, Users } from '../../data/index';
+import { verifyPassword, generateJwtToken, getUtcDateTime } from '../../utils/index';
 
 const login = new Login();
 const user = new Users();
@@ -19,8 +21,8 @@ const closeDb = async () => {
  * TODO: Add Unknow User check, block IP after 5 failed attempts
  */
 
-const handleLogin = async (req, res) => {
-    if (!validateInputs(req, res)) {return;}
+const handleLogin = async (req: RequestWithSession, res: Response) => {
+    if (!validateInputs(req, res)) { return; }
 
     try {
         const { email, password } = req.body;
@@ -54,7 +56,7 @@ const handleLogin = async (req, res) => {
         const token = generateJwtToken(session, '1h');
         const refreshToken = generateJwtToken(session, '30d');
 
-        req.session.userId = session;
+        req.session.userId = JSON.stringify(session);
         req.session.email = email;
         res.status(200).json({ data: { ...session, token, refreshToken }, error: '' });
 
@@ -66,7 +68,7 @@ const handleLogin = async (req, res) => {
     }
 };
 
-const validateInputs = (req, res) => {
+const validateInputs = (req: Request, res: Response): boolean => {
     const { email, password } = req.body;
 
     if (!email) {
@@ -88,11 +90,11 @@ const validateInputs = (req, res) => {
 }
 
 //
-module.exports = function loginHandler(req, res) {
+export default function loginHandler(req: Request, res: Response) {
     restful(req, res, {
         post: [validateInputs, handleLogin],
-        get: invalidMethodHandler(res, 'GET_LOGIN_HANDLER'),
-        put: invalidMethodHandler(res, 'PUT_LOGIN_HANDLER'),
-        delete: invalidMethodHandler(res, 'DELETE_LOGIN_HANDLER')
+        get: invalidMethodHandler(req, res, 'GET_LOGIN_HANDLER'),
+        put: invalidMethodHandler(req, res, 'PUT_LOGIN_HANDLER'),
+        delete: invalidMethodHandler(req, res, 'DELETE_LOGIN_HANDLER')
     });
 };

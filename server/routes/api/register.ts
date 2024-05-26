@@ -1,31 +1,43 @@
-const bcrypt = require('bcryptjs');
-const xssFilters = require('xss-filters');
-const zxcvbn = require('zxcvbn');
-const dotenv = require('dotenv');
-const { Creds, Users, Login } = require('../../data/index');
-const {invalidMethodHandler, restful, responseHandler, translations} = require('../../helpers/index');
-const { hashPassword, getUtcDateTime } = require('../../utils/index');
-const { logger } = require('../../logger');
+import bcrypt from 'bcryptjs';
+import xssFilters from 'xss-filters';
+import zxcvbn from 'zxcvbn';
+import dotenv from 'dotenv';
+import { Creds, Users, Login } from '../../data/index';
+import { invalidMethodHandler, restful, responseHandler, translations } from '../../helpers/index';
+import { hashPassword, getUtcDateTime } from '../../utils/index';
+import { logger } from '../../logger';
+import { Request, Response } from 'express';
+
 dotenv.config();
 
-const validateInputs = (req, res) => {
+interface validationConfigObject {
+    maxLength: number;
+    minLength: number;
+    regex: RegExp;
+    emptyError: string;
+    tooLongError: string;
+    tooShortError: string;
+    invalidError: string;
+}
+
+const validateInputs = (req: Request, res: Response) => {
     const { email, password, firstName, lastName, dobMonth, dobDay, dobYear } = req.body;
 
-    const validateField = (field, { maxLength, minLength, regex, emptyError, tooLongError, tooShortError, invalidError }) => {
+    const validateField = (field: any, { maxLength, minLength, regex, emptyError, tooLongError, tooShortError, invalidError }: validationConfigObject) => {
         if (!field) {
-            responseHandler(res, { data: [], error: translations('en', emptyError), status: 400, method: 'POST', responseHandler: 'validateField' });
+            responseHandler(req, res, { data: [], error: translations('en', emptyError), status: 400, method: 'POST', responseHandler: 'validateField' });
             return false;
         }
         if (field.length > maxLength) {
-            responseHandler(res, { data: [], error: translations('en', tooLongError), status: 400, method: 'POST', responseHandler: 'validateField' });
+            responseHandler(req, res, { data: [], error: translations('en', tooLongError), status: 400, method: 'POST', responseHandler: 'validateField' });
             return false;
         }
         if (field.length < minLength) {
-            responseHandler(res, { data: [], error: translations('en', tooShortError), status: 400, method: 'POST', responseHandler: 'validateField' });
+            responseHandler(req, res, { data: [], error: translations('en', tooShortError), status: 400, method: 'POST', responseHandler: 'validateField' });
             return false;
         }
         if (!regex.test(field)) {
-            responseHandler(res, { data: [], error: translations('en', invalidError), status: 400, method: 'POST', responseHandler: 'validateField' });
+            responseHandler(req, res, { data: [], error: translations('en', invalidError), status: 400, method: 'POST', responseHandler: 'validateField' });
             return false;
         }
         return true;
@@ -47,33 +59,33 @@ const validateInputs = (req, res) => {
     }
 
     if (!password) {
-        responseHandler(res, { data: [], error: translations('en', 'PASSWORD_EMPTY'), status: 400, method: 'POST', responseHandler: 'validateField' });
+        responseHandler(req, res, { data: [], error: translations('en', 'PASSWORD_EMPTY'), status: 400, method: 'POST', responseHandler: 'validateField' });
         return false;
     }
     if (password.length > 50) {
-        responseHandler(res, { data: [], error: translations('en', 'PASSWORD_TOO_LONG'), status: 400, method: 'POST', responseHandler: 'validateField' });
+        responseHandler(req, res, { data: [], error: translations('en', 'PASSWORD_TOO_LONG'), status: 400, method: 'POST', responseHandler: 'validateField' });
         return false;
     }
     if (password.length < 8) {
-        responseHandler(res, { data: [], error: translations('en', 'PASSWORD_TOO_SHORT'), status: 400, method: 'POST', responseHandler: 'validateField' });
+        responseHandler(req, res, { data: [], error: translations('en', 'PASSWORD_TOO_SHORT'), status: 400, method: 'POST', responseHandler: 'validateField' });
         return false;
     }
     if (!/^(?!.*(.)\1{3})(?=.*[a-z])(?=.*[A-Z])(?=.*[\d!@#$%^&*()_+{}[\]:;"'<>,.?/~`|-]).{12,}$/.test(password)) {
-        responseHandler(res, { data: [], error: translations('en', 'PASSWORD_INVALID'), status: 400, method: 'POST', responseHandler: 'validateField' });
+        responseHandler(req, res, { data: [], error: translations('en', 'PASSWORD_INVALID'), status: 400, method: 'POST', responseHandler: 'validateField' });
         return false;
     }
 
     const { score } = zxcvbn(password);
     const scoreVerb = ['Risky', 'Weak', 'Medium', 'Tough', 'Strongest'];
     if (score < 2) {
-        responseHandler(res, { data: [], error: translations('en', `PASSWORD_${scoreVerb[score].toUpperCase()}`), status: 400, method: 'POST', responseHandler: 'validateField' });
+        responseHandler(req, res, { data: [], error: translations('en', `PASSWORD_${scoreVerb[score].toUpperCase()}`), status: 400, method: 'POST', responseHandler: 'validateField' });
         return false;
     }
 
     return true;
 };
 
-const handleRegistration = async (req, res) => {
+const handleRegistration = async (req: Request, res: Response) => {
     if (!validateInputs(req, res)) { return; }
 
     const { email, password, firstName, lastName, dobMonth, dobDay, dobYear } = req.body;
@@ -83,12 +95,12 @@ const handleRegistration = async (req, res) => {
     try {
         const user = new Users();
         if (await user.getUserExistsByEmail(safeEmail)) {
-            responseHandler(res, { data: [], error: translations('en', 'USER_ALREADY_EXISTS'), status: 422, method: 'POST', responseHandler: 'handleRegistration' });
+            responseHandler(req, res, { data: [], error: translations('en', 'USER_ALREADY_EXISTS'), status: 422, method: 'POST', responseHandler: 'handleRegistration' });
             throw new Error('USER_ALREADY_EXISTS');
         }
 
         const hashedPassword = await hashPassword(password).catch((err) => {
-            responseHandler(res, { data: [], error: translations('en', 'CREATE_LOGIN_FAILED_HASH'), status: 422, method: 'POST', responseHandler: 'handleRegistration' });
+            responseHandler(req, res, { data: [], error: translations('en', 'CREATE_LOGIN_FAILED_HASH'), status: 422, method: 'POST', responseHandler: 'handleRegistration' });
             throw new Error(`CREATE_LOGIN_FAILED_HASH: ${err}`)
         });
 
@@ -99,12 +111,12 @@ const handleRegistration = async (req, res) => {
             pass: hashedPassword[1],
             salt: hashedPassword[0],
         }).catch((err) => {
-            responseHandler(res, { data: [], error: translations('en', 'CREATE_LOGIN_FAILED_CREATION'), status: 422, method: 'POST', responseHandler: 'handleRegistration' });
-            throw new Error({ 'CREATE_LOGIN_FAILED_CREATION': err });
+            responseHandler(req, res, { data: [], error: translations('en', 'CREATE_LOGIN_FAILED_CREATION'), status: 422, method: 'POST', responseHandler: 'handleRegistration' });
+            throw new Error(`CREATE_LOGIN_FAILED_CREATION: ${err}`);
         });
 
         const userId = await user.getUserIdByEmail(safeEmail).catch((err) => {
-            responseHandler(res, { data: [], error: translations('en', 'CREATE_LOGIN_FAILED_GET_USER'), status: 422, method: 'POST', responseHandler: 'handleRegistration' });
+            responseHandler(req, res, { data: [], error: translations('en', 'CREATE_LOGIN_FAILED_GET_USER'), status: 422, method: 'POST', responseHandler: 'handleRegistration' });
             throw new Error(`CREATE_LOGIN_FAILED_GET_USER: ${err}`);
         });
 
@@ -121,20 +133,19 @@ const handleRegistration = async (req, res) => {
         })
             .then((verification) => {
                 // TODO: send email
-                responseHandler(res, { data: verification, error: '' });
+                responseHandler(req, res, { data: { userId, email: safeEmail }, error: '', status: 200, method: 'POST', responseHandler: 'handleRegistration' });
                 return;
             })
             .catch((err) => {
                 logger.error(err);
-                responseHandler(res, { data: [], error: translations('en', 'CREATE_VERIFICATION_FAILED'), status: 422, method: 'POST', responseHandler: 'handleRegistration' });
+                responseHandler(req, res, { data: [], error: translations('en', 'CREATE_VERIFICATION_FAILED'), status: 422, method: 'POST', responseHandler: 'handleRegistration' });
                 return;
             });
 
 
         await user.createUserInformation({
             id: userId,
-            first_name: firstName,
-            last_name: lastName,
+            name: `${firstName} ${lastName}`,
             profile_img: '',
             dob: `${dobYear}-${dobMonth}-${dobDay}`
         }).catch((err) => {
@@ -143,16 +154,16 @@ const handleRegistration = async (req, res) => {
 
     } catch (err) {
         logger.error(err);
-        responseHandler(res, { data: [], error: translations('en', 'CREATE_INFORMATION_FAILED'), status: 500, method: 'POST', responseHandler: 'handleRegistration' });
+        responseHandler(req, res, { data: [], error: translations('en', 'CREATE_INFORMATION_FAILED'), status: 500, method: 'POST', responseHandler: 'handleRegistration' });
         return;
     }
 }
 
-module.exports = function loginHandler(req, res) {
+export default function registerHandler(req: Request, res: Response) {
     restful(req, res, {
         post: [validateInputs, handleRegistration],
-        get: invalidMethodHandler(res, 'GET_LOGIN_HANDLER'),
-        put: invalidMethodHandler(res, 'PUT_LOGIN_HANDLER'),
-        delete: invalidMethodHandler(res, 'DELETE_LOGIN_HANDLER')
+        get: invalidMethodHandler(req, res, 'GET_LOGIN_HANDLER'),
+        put: invalidMethodHandler(req, res, 'PUT_LOGIN_HANDLER'),
+        delete: invalidMethodHandler(req, res, 'DELETE_LOGIN_HANDLER')
     });
 };

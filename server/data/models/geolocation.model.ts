@@ -2,7 +2,7 @@ const Database = require('../database');
 // const { logger } = require('../../logger');
 // const { getUtcDateTime } = require('../../../shared/utils/date.functions');
 
-module.exports = class geoLocationModel {
+export default class geoLocationModel {
     #db;
     #geoTable = 'geolocation';
 
@@ -10,25 +10,25 @@ module.exports = class geoLocationModel {
         this.#db = new Database();
     }
 
-    async closeConnection() {
+    async closeConnection(): Promise<void> {
         await this.#db.close();
     }
 
-    async getLatAndLongByPostCode(postCode) {
+    async getLatAndLongByPostCode(postCode: string): Promise<any[]> {
         const query = `SELECT latitude, longitude FROM ${this.#geoTable} WHERE postcode = ?`;
         const params = [postCode];
         const result = await this.#db.query(query, params);
         return result;
     }
 
-    async getPostalCodesWithinRadius(lat, long, radius) {
+    async getPostalCodesWithinRadius(lat: string, long: string, radius: string): Promise<any[]> {
         const query = `SELECT postcode FROM ${this.#geoTable} WHERE (3959 * acos(cos(radians(?)) * cos(radians(latitude)) * cos(radians(longitude) - radians(?)) + sin(radians(?)) * sin(radians(latitude))) < ?`;
         const params = [lat, long, lat, radius];
         const result = await this.#db.query(query, params);
         return result;
     }
 
-    async getPostalCodesWithinRadiusOfPostCode(postCode, radius) {
+    async getPostalCodesWithinRadiusOfPostCode(postCode: string, radius: string): Promise<any[]> {
         // const query = `SELECT postcode FROM ${this.#geoTable} WHERE (3959 * acos(cos(radians(latitude)) * cos(radians((SELECT latitude FROM ${this.#geoTable} WHERE postcode = ?))) * cos(radians(longitude) - radians((SELECT longitude FROM ${this.#geoTable} WHERE postcode = ?))) + sin(radians(latitude)) * sin(radians((SELECT latitude FROM ${this.#geoTable} WHERE postcode = ?)))) < ?`;
         const query = `
             SELECT postal_code

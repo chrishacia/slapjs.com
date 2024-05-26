@@ -1,7 +1,15 @@
 const Database = require('../database');
 const logger = require('../../logger');
 
-class JwtModel {
+interface userIdType {
+    userId: number;
+}
+
+interface refreshTokenType {
+    refreshToken: string;
+}
+
+export default class JwtModel {
   #db;
 
   #table = 'user_jwt_refresh';
@@ -10,7 +18,7 @@ class JwtModel {
         this.#db = new Database();
     }
 
-    async updateRefreshToken(userId, refreshToken) {
+    async updateRefreshToken(userId: userIdType, refreshToken: refreshTokenType): Promise<void> {
         try {
             const sql = `UPDATE ${this.#table} SET refresh_token = ? WHERE userId = ?`;
             await this.#db.query(sql, [refreshToken, userId]);
@@ -20,7 +28,7 @@ class JwtModel {
         }
     }
 
-    async getRefreshToken(userId) {
+    async getRefreshToken(userId: userIdType): Promise<string> {
         try {
             const sql = `SELECT refresh_token FROM ${this.#table} WHERE userId = ?`;
             const results = await this.#db.query(sql, [userId]);
@@ -34,7 +42,7 @@ class JwtModel {
         }
     }
 
-    async createRefreshToken(userId, refreshToken) {
+    async createRefreshToken(userId: userIdType, refreshToken: refreshTokenType): Promise<void> {
         try {
             const sql = `INSERT INTO ${this.#table} (userId, refresh_token) VALUES (?, ?)`;
             await this.#db.query(sql, [userId, refreshToken]);
@@ -48,5 +56,3 @@ class JwtModel {
         await this.#db.close();
     }
 }
-
-module.exports = JwtModel;

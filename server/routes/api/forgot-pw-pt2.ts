@@ -1,10 +1,11 @@
 const {invalidMethodHandler, restful} = require('../../helpers/index');
+import { Request, Response } from 'express';
 
-// const handleForgotPassword1 = async (req, res) => {
+// const handleForgotPassword2 = async (req, res) => {
 //     return null;
 // }
 
-module.exports = function loginHandler(req, res) {
+export default function forgotPw2Handler(req: Request, res: Response) {
     restful(req, res, {
         post: invalidMethodHandler(res, 'POST_LOGIN_HANDLER'),
         get: invalidMethodHandler(res, 'GET_LOGIN_HANDLER'),
