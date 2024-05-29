@@ -1,8 +1,10 @@
-const validator = require('email-validator');
 import React, { useState } from 'react';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { createRoot } from 'react-dom/client';
+import validator from 'email-validator';
+
 import { baseUrl } from '../config/index.js';
+
 
 function Login() {
     const [formData, setFormData] = useState({

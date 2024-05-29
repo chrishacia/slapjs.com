@@ -1,10 +1,10 @@
-const validator = require('email-validator');
-import React, { useState } from 'react';
-// eslint-disable-next-line import/no-extraneous-dependencies
+import { useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { baseUrl } from '../config/index.js';
-// TODO: Password Strength Meter and Password Requirements
+import validator from 'email-validator';
 
+import { baseUrl } from '../config/index.js';
+
+// TODO: Password Strength Meter and Password Requirements
 function Register() {
     const [formData, setFormData] = useState({
         email: '',

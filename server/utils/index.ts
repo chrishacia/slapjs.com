@@ -1,3 +1,5 @@
+import { getUtcDateTime } from '../../shared/utils/date.functions';
+
 import { getJwtTokenDetails, generateJwtToken, verifyJwtToken } from './jwt.functions';
 import {
     checkStrengthScore,
@@ -6,7 +8,6 @@ import {
     validatePasswordRequirements,
     verifyPassword,
 }  from './password.functions';
-import { getUtcDateTime } from '../../shared/utils/date.functions';
 
 export {
     getJwtTokenDetails,

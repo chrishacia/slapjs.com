@@ -1,0 +1,19 @@
+{
+    "compilerOptions": {
+      "target": "es5",
+      "lib": ["dom", "es2015", "es2017"],
+      "jsx": "react",
+      "module": "commonjs",
+      "allowJs": true,
+      "checkJs": false,
+      "outDir": "./public/dist",
+      "rootDir": "./frontend/src",
+      "strict": true,
+      "moduleResolution": "node",
+      "esModuleInterop": true,
+      "skipLibCheck": true,
+      "forceConsistentCasingInFileNames": true
+    },
+    "include": ["frontend/src/**/*"],
+    "exclude": ["node_modules", "dist"]
+  }

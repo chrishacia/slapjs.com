@@ -1,10 +1,11 @@
-import YAML from 'yamljs';
-import express from 'express';
 import path from 'path';
-import routes from './routes/index';
+
+import YAML from 'yamljs';
+import express, { Response, NextFunction } from 'express';
 import swaggerUi from 'swagger-ui-express';
-import { Request, Response, NextFunction } from 'express';
+
 import { RequestWithSession } from './types/server-sessions';
+import routes from './routes/index'; // This seems like a potential issue
 
 const router = express.Router();
 
@@ -36,7 +37,6 @@ router.use('/api/logout', routes.logout);
 router.use('/api/register', routes.register);
 router.use('/api/fpw', routes.forgotpw);
 router.use('/api/fpwv', routes.forgotverify);
-
 
 // frontend routes
 // Public routes

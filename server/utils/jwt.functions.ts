@@ -8,6 +8,8 @@ const secretKey = process.env.SERVER_SESSION_SECRET as string;
 
 interface JwtPayloadExtended extends JwtPayload {
   // Add any custom fields you expect in the decoded JWT payload here
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [key: string]: any;
 }
 

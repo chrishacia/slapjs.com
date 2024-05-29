@@ -1,14 +1,14 @@
-const bodyParser = require('body-parser');
-const compression = require('compression');
-const cors = require('cors');
-const dotenv = require('dotenv');
-const express = require('express');
-const { engine } = require('express-handlebars');
-const session = require('express-session');
-const path = require('path');
-const routes = require('./server/routes');
-import { Request, Express } from 'express';
-import Cors from 'cors';
+import path from 'path';
+
+import bodyParser from 'body-parser';
+import compression from 'compression';
+import cors, { CorsOptions, CorsOptionsDelegate } from 'cors';
+import dotenv from 'dotenv';
+import express, { Request, Express } from 'express';
+import { engine } from 'express-handlebars';
+import session from 'express-session';
+
+import routes from './server/routes'; // Ensure this is the correct path
 
 dotenv.config();
 const app: Express = express();
@@ -19,8 +19,8 @@ const whitelist = (process.env.SERVER_WHITELIST ?? '').split(',');
 const domainExistsOnWhitelist = (req: Request) => whitelist.indexOf(req.header('Origin') as string) !== -1;
 
 // enable CORS
-const corsOptionsDelegate = (req: Request, callback: (error: any, options: Cors.CorsOptions) => void) => {
-    let corsOptions;
+const corsOptionsDelegate: CorsOptionsDelegate<Request> = (req: Request, callback: (err: Error | null, options?: CorsOptions) => void) => {
+    let corsOptions: CorsOptions;
     if (domainExistsOnWhitelist(req)) {
         // Enable CORS for this request
         corsOptions = { origin: true };
@@ -42,7 +42,7 @@ app.engine('hbs', engine({
 app.use(bodyParser.json());
 
 app.use(session({
-  secret: process.env.SERVER_SESSION_SECRET,
+  secret: process.env.SERVER_SESSION_SECRET!,
   resave: false,
   rolling: true,
   saveUninitialized: true,
@@ -70,11 +70,11 @@ app.use('/js', express.static(`${__dirname}/node_modules/@fortawesome/fontawesom
 app.use('/', express.static(path.join(__dirname, 'public'), { maxAge: 31557600000 }));
 
 // Routes
-app.use(routes);
+app.use(routes); // Ensure routes is a valid middleware function
 
 app.listen(PORT, () => {
   if (process.env.SERVER_ENV !== 'production') {
     // eslint-disable-next-line no-console
-    console.log(`Server running in ${PORT} mode`);
+    console.log(`Server running on port ${PORT}`);
   }
 });

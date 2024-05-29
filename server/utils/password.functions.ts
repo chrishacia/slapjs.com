@@ -1,6 +1,7 @@
 import bcrypt from 'bcryptjs';
-import { logger } from '../logger';
 import zxcvbn, {ZXCVBNResult} from 'zxcvbn';
+
+import { logger } from '../logger';
 
 const hashPassword = async (plainTextPassword: string): Promise<[string, string]> => {
   try {
@@ -26,13 +27,13 @@ const verifyPassword = async (plainTextPassword: string, salt: string, hashedPas
 
 const checkStrengthScore = (password: string): ZXCVBNResult => {
   return zxcvbn(password);
-}
+};
 
 const checkStrengthValue = (password: string): string => {
   const { score } = checkStrengthScore(password);
   const scoreVerb = ['Risky', 'Weak', 'Medium', 'Tough', 'Strongest'];
   return `PASSWORD_${scoreVerb[score].toUpperCase()}`;
-}
+};
 
 /**
  * Password Requirements:
@@ -45,7 +46,7 @@ const checkStrengthValue = (password: string): string => {
 const validatePasswordRequirements = (password: string): boolean => {
   // eslint-disable-next-line no-useless-escape
   return !/^(?!.*(.)\1{3})(?=.*[a-z])(?=.*[A-Z])(?=.*[\d!@#$%^&*()_+{}\[\]:;"'<>,.?\/~`|-]).{12,}$/.test(password);
-}
+};
 
 export {
   checkStrengthScore,

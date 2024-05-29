@@ -1,8 +1,9 @@
-const {restful, invalidMethodHandler} = require ('../../helpers');
-const { logger } = require('../../logger');
-const { JwtModel } = require('../../data');
-const { verifyJwtToken, generateJwtToken, getUtcDateTime } = require('../../utils');
 import { Request, Response } from 'express';
+
+import { restful, invalidMethodHandler } from '../../helpers';
+import { logger } from '../../logger';
+import { JwtModel } from '../../data';
+import { verifyJwtToken, generateJwtToken, getUtcDateTime } from '../../utils';
 
 const handleJWTRefresh = async (req: Request, res: Response) => {
     try {
@@ -38,7 +39,7 @@ const handleJWTRefresh = async (req: Request, res: Response) => {
         const newRefreshToken = generateJwtToken(session, '30d');
 
         await jwtModel.createRefreshToken(userId, refreshToken);
-        jwtModel.updateRefreshToken(jwtToken.userId, newRefreshToken);
+        jwtModel.updateRefreshToken(jwtToken.userId, { refreshToken: newRefreshToken });
         jwtModel.closeConnection();
 
         res.status(200).json({ data: { userId, accessToken, refreshToken: newRefreshToken }, error: '' });
@@ -46,7 +47,7 @@ const handleJWTRefresh = async (req: Request, res: Response) => {
         logger.error(err);
         res.status(500).json({ data: [], error: 'JWT_REFRESH_FAILED' });
     }
-}
+};
 
 export default function jwtRefreshHandler(req: Request, res: Response) {
     restful(req, res, {
@@ -63,4 +64,4 @@ export default function jwtRefreshHandler(req: Request, res: Response) {
             handler: (req: Request, res: Response) => invalidMethodHandler(req, res, 'DELETE_JWTREFRESH_HANDLER')
         }
     });
-};
+}

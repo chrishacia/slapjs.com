@@ -1,32 +1,28 @@
-// Desc: Login model
+import { RowDataPacket, OkPacket } from 'mysql2';
 
-const Database = require('../database');
-const { logger } = require('../../logger');
+import Database from '../database';
+import { logger } from '../../logger';
 
 export default class Users {
-    #db;
+    #db: Database;
 
     // tables
     #login_table = 'login';
-
     #user_info = 'user_information';
 
     constructor() {
         this.#db = new Database();
     }
 
-    async closeConnection() {
+    async closeConnection(): Promise<void> {
         await this.#db.close();
     }
 
     async getUserExistsByEmail(email: string): Promise<boolean> {
         try {
-            const sql = `SELECT * FROM ${this.#login_table} WHERE email = ? limit 1`;
-            const results = await this.#db.query(sql, [email]);
-            if (results.length > 0) {
-                return true;
-            }
-            return false;
+            const sql = `SELECT * FROM ${this.#login_table} WHERE email = ? LIMIT 1`;
+            const results = await this.#db.query<RowDataPacket[]>(sql, [email]);
+            return results.length > 0;
         } catch (err) {
             logger.error(err);
             throw err;
@@ -35,40 +31,31 @@ export default class Users {
 
     async getUserExistsById(id: number): Promise<boolean> {
         try {
-            const sql = `SELECT * FROM ${this.#login_table} WHERE id = ? limit 1`;
-            const results = await this.#db.query(sql, [id]);
-            if (results.length > 0) {
-                return true;
-            }
-            return false;
+            const sql = `SELECT * FROM ${this.#login_table} WHERE id = ? LIMIT 1`;
+            const results = await this.#db.query<RowDataPacket[]>(sql, [id]);
+            return results.length > 0;
         } catch (err) {
             logger.error(err);
             throw err;
         }
     }
 
-    async getUserInformationById(id: number): Promise<any[]> {
+    async getUserInformationById(id: number): Promise<RowDataPacket[]> {
         try {
-            const sql = `SELECT * FROM ${this.#user_info} WHERE user_id = ? limit 1`;
-            const results = await this.#db.query(sql, [id]);
-            if (results.length > 0) {
-                return results[0];
-            }
-            return [];
+            const sql = `SELECT * FROM ${this.#user_info} WHERE user_id = ? LIMIT 1`;
+            const results = await this.#db.query<RowDataPacket[]>(sql, [id]);
+            return results.length > 0 ? results : [];
         } catch (err) {
             logger.error(err);
             throw err;
         }
     }
 
-    async getUserInformationByEmail(email: string): Promise<any[]> {
+    async getUserInformationByEmail(email: string): Promise<RowDataPacket[]> {
         try {
-            const sql = `SELECT * FROM ${this.#login_table} l JOIN ${this.#user_info} u on l.id = u.user_id WHERE l.email = ? limit 1`;
-            const results = await this.#db.query(sql, [email]);
-            if (results.length > 0) {
-                return results[0];
-            }
-            return [];
+            const sql = `SELECT * FROM ${this.#login_table} l JOIN ${this.#user_info} u ON l.id = u.user_id WHERE l.email = ? LIMIT 1`;
+            const results = await this.#db.query<RowDataPacket[]>(sql, [email]);
+            return results.length > 0 ? results : [];
         } catch (err) {
             logger.error(err);
             throw err;
@@ -77,9 +64,9 @@ export default class Users {
 
     async getUserIdByEmail(email: string): Promise<number> {
         try {
-            const sql = `SELECT id FROM ${this.#login_table} WHERE email = ? limit 1`;
-            const results = await this.#db.query(sql, [email]);
-            return results[0].id || 0;
+            const sql = `SELECT id FROM ${this.#login_table} WHERE email = ? LIMIT 1`;
+            const results = await this.#db.query<RowDataPacket[]>(sql, [email]);
+            return results.length > 0 ? results[0].id : 0;
         } catch (err) {
             logger.error(err);
             throw err;
@@ -88,26 +75,19 @@ export default class Users {
 
     async getUserEmailById(id: number): Promise<string> {
         try {
-            const sql = `SELECT email FROM ${this.#login_table} WHERE id = ? limit 1`;
-            const results = await this.#db.query(sql, [id]);
-            return results[0].email || '';
+            const sql = `SELECT email FROM ${this.#login_table} WHERE id = ? LIMIT 1`;
+            const results = await this.#db.query<RowDataPacket[]>(sql, [id]);
+            return results.length > 0 ? results[0].email : '';
         } catch (err) {
             logger.error(err);
             throw err;
         }
     }
 
-    async createUserInformation(
-        data: {
-            id: number;
-            name: string;
-            profile_img: string;
-            dob: string;
-        }): Promise<any[]> {
+    async createUserInformation(data: { id: number; name: string; profile_img: string; dob: string }): Promise<OkPacket> {
         try {
-            const sql = `INSERT INTO ${this.#user_info} (user_id, name, profile_img, dob)`;
-            const values = `VALUES ('${data.id}', '${data.name}', '${data.profile_img}', ${data.dob})`;
-            const results = await this.#db.query(sql + values);
+            const sql = `INSERT INTO ${this.#user_info} (user_id, name, profile_img, dob) VALUES (?, ?, ?, ?)`;
+            const results = await this.#db.query<OkPacket>(sql, [data.id, data.name, data.profile_img, data.dob]);
             return results;
         } catch (err) {
             logger.error(err);
@@ -115,23 +95,10 @@ export default class Users {
         }
     }
 
-    async updateUserInformation(
-        data: {
-            userId: number;
-            name: string;
-            dob: string;
-            postalCode: string;
-
-        }): Promise<any[]> {
+    async updateUserInformation(data: { userId: number; name: string; dob: string; postalCode: string }): Promise<OkPacket> {
         try {
-            const sql = `UPDATE ${this.#user_info} SET name = ?, dob = ?, postalCode = ? WHERE user_id = ${data.userId}`;
-            const results = await this.#db.query(sql, [
-                data.name,
-                data.dob,
-                data.postalCode,
-                data.userId,
-            ]);
-
+            const sql = `UPDATE ${this.#user_info} SET name = ?, dob = ?, postalCode = ? WHERE user_id = ?`;
+            const results = await this.#db.query<OkPacket>(sql, [data.name, data.dob, data.postalCode, data.userId]);
             return results;
         } catch (err) {
             logger.error(err);
@@ -142,8 +109,7 @@ export default class Users {
     async updateUserProfilePic(userId: number, profile_img: string): Promise<boolean> {
         try {
             const sql = `UPDATE ${this.#user_info} SET profile_img = ? WHERE user_id = ?`;
-            const results = await this.#db.query(sql, [profile_img, userId]);
-
+            const results = await this.#db.query<OkPacket>(sql, [profile_img, userId]);
             return results.affectedRows > 0;
         } catch (err) {
             logger.error(err);

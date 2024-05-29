@@ -1,15 +1,16 @@
-const {invalidMethodHandler, restful} = require('../../helpers/index');
 import { Request, Response } from 'express';
 
-// const handleForgotPassword2 = async (req, res) => {
+import { invalidMethodHandler, restful } from '../../helpers/index';
+
+// const handleForgotPassword1 = async (req, res) => {
 //     return null;
 // }
 
 export default function forgotPw2Handler(req: Request, res: Response) {
     restful(req, res, {
-        post: invalidMethodHandler(res, 'POST_LOGIN_HANDLER'),
-        get: invalidMethodHandler(res, 'GET_LOGIN_HANDLER'),
-        put: invalidMethodHandler(res, 'PUT_LOGIN_HANDLER'),
-        delete: invalidMethodHandler(res, 'DELETE_LOGIN_HANDLER')
+        post: { handler: (req, res) => invalidMethodHandler(req, res, 'POST_FORGOTPW2_HANDLER') },
+        get: { handler: (req, res) => invalidMethodHandler(req, res, 'GET_FORGOTPW2_HANDLER') },
+        put: { handler: (req, res) => invalidMethodHandler(req, res, 'PUT_FORGOTPW2_HANDLER') },
+        delete: { handler: (req, res) => invalidMethodHandler(req, res, 'DELETE_FORGOTPW2_HANDLER') },
     });
-};
+}

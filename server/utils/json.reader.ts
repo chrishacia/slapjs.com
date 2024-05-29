@@ -1,35 +1,50 @@
-const fs = require('fs');
-const path = require('path');
-const { logger } = require('../logger');
+import fs from 'fs';
+import path from 'path';
 
-export const jsonReader = (jsonFile) => {
+import { logger } from '../logger';
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const jsonReader = (jsonFile: string): Promise<any> => {
     // Read the JSON file asynchronously
     const jsonFilePath = path.join(__dirname, jsonFile);
 
-    fs.readFile(jsonFilePath, 'utf8', (err, data) => {
-        if (err) {
-            logger.error(`Error reading file from disk: ${err}`);
-            return;
-        }
-        // Parse the JSON data
-        return JSON.parse(data);
-    });
-}
-
-export const jsonWriter = (jsonFile, data) => {
-    // Write the JSON data to the file asynchronously
-    const jsonFilePath = path.join(__dirname, jsonFile);
-
-    fs.writeFile(jsonFilePath, JSON.stringify(data), 'utf8', (err) => {
-        if (err) {
-            logger.error('Error writing to the file:', err);
-            return;
-        }
-        logger.log(`Data written to ${jsonFile} successfully.`);
+    return new Promise((resolve, reject) => {
+        fs.readFile(jsonFilePath, 'utf8', (err, data) => {
+            if (err) {
+                logger.error(`Error reading file from disk: ${err}`);
+                reject(err);
+                return;
+            }
+            try {
+                // Parse the JSON data
+                const jsonData = JSON.parse(data);
+                resolve(jsonData);
+            } catch (parseErr) {
+                logger.error(`Error parsing JSON data: ${parseErr}`);
+                reject(parseErr);
+            }
+        });
     });
 };
 
-export const debugJsonFilePath = (jsonFile) => {
+export const jsonWriter = (jsonFile: string, data: object): Promise<void> => {
+    // Write the JSON data to the file asynchronously
     const jsonFilePath = path.join(__dirname, jsonFile);
-    logger.log(`JSON file path: ${jsonFilePath}`);
-}
+
+    return new Promise((resolve, reject) => {
+        fs.writeFile(jsonFilePath, JSON.stringify(data, null, 2), 'utf8', (err) => {
+            if (err) {
+                logger.error('Error writing to the file:', err);
+                reject(err);
+                return;
+            }
+            logger.info(`Data written to ${jsonFile} successfully.`);
+            resolve();
+        });
+    });
+};
+
+export const debugJsonFilePath = (jsonFile: string): void => {
+    const jsonFilePath = path.join(__dirname, jsonFile);
+    logger.info(`JSON file path: ${jsonFilePath}`);
+};

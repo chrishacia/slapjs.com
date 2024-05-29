@@ -1,5 +1,4 @@
-import React, { useEffect, useState } from 'react';
-// eslint-disable-next-line import/no-extraneous-dependencies
+import { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
 function ForgotPassword() {
@@ -45,7 +44,7 @@ function ForgotPassword() {
         }
         <hr className="my-4" />
         <a href="/login" className="btn btn-primary w-100 py-2 mb-2">Login</a>
-        <p className="mt-5 mb-3 text-body-secondary text-center">&copy; { new Date().getFullYear() }</p>
+        <p className="mt-5 mb-3 text-body-secondary text-center">&copy; {new Date().getFullYear()}</p>
     </main>
   );
 }

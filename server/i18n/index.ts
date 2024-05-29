@@ -4,4 +4,4 @@ import {es} from './translations.es';
 export {
     en,
     es
-}
+};

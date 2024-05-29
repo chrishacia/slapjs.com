@@ -1,17 +1,10 @@
 import mysql, { Connection, QueryError, RowDataPacket, OkPacket, ResultSetHeader } from 'mysql2';
-import { logger } from '../logger';
 import dotenv from 'dotenv';
 
-dotenv.config();
+import { SqlError } from '../types/database.types';
+import { logger } from '../logger';
 
-interface SqlError extends Omit<QueryError, 'code'> {
-  code: string;
-  errno?: number;
-  sqlMessage?: string;
-  sqlState?: string;
-  index?: number;
-  sql?: string;
-}
+dotenv.config();
 
 export default class Database {
   #connection: Connection;
@@ -25,23 +18,26 @@ export default class Database {
     });
   }
 
-  query<T = any>(sql: string, args?: any[]): Promise<T[]> {
+  query<T extends RowDataPacket[] | RowDataPacket[][] | OkPacket | OkPacket[] | ResultSetHeader>(
+    sql: string,
+    args?: (string | number | boolean | null)[]
+  ): Promise<T> {
     return new Promise((resolve, reject) => {
-      this.#connection.query(sql, args, (err, rows) => {
+      this.#connection.query(sql, args, (err: QueryError | null, results: T) => {
         if (err) {
-          this.handleQueryErr(err);
+          this.handleQueryErr(err as SqlError);
           return reject(err);
         }
-        resolve(rows as T[]);
+        resolve(results);
       });
     });
   }
 
   close(): Promise<void> {
     return new Promise((resolve, reject) => {
-      this.#connection.end((err) => {
+      this.#connection.end((err: QueryError | null) => {
         if (err) {
-          this.handleQueryErr(err);
+          this.handleQueryErr(err as SqlError);
           return reject(err);
         }
         resolve();
@@ -74,7 +70,7 @@ export default class Database {
     return sqlErr;
   }
 
-  debugQuery(sql: string, args?: any[]): string | null {
+  debugQuery(sql: string, args?: (string | number | boolean | null)[]): string | null {
     const query = this.#connection.format(sql, args);
     if (process.env.SERVER_ENV === 'development') {
       console.log('===== DEBUG QUERY MODE =====');

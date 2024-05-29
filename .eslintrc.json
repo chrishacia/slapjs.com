@@ -1,36 +1,118 @@
 {
-  "env": {
-      "browser": true,
-      "es2021": true,
-      "node": true,
-      "jest": true,
-      "es6": true
-  },
-  "extends": [
-    "eslint:recommended",
-    "plugin:react/recommended"
-  ],
-  "parserOptions": {
-      "ecmaVersion": "latest",
-      "sourceType": "module",
-      "ecmaFeatures": {
-          "jsx": true
-      }
-  },
-  "plugins": ["import", "jsx-a11y", "react", "react-hooks"],
-  "ignorePatterns": ["node_modules/", "build/", "*.min.js"],
-  "rules": {
-    "react/jsx-uses-react": "error",
-    "react/jsx-uses-vars": "error",
-    "react/react-in-jsx-scope": "off",
-    "global-require": "off",
-    "import/no-extraneous-dependencies": [
-      "error",
-      {
-        "optionalDependencies": false,
-        "peerDependencies": false,
-        "devDependencies": false
-      }
+    "env": {
+        "browser": true,
+        "es2021": true,
+        "node": true,
+        "jest": true,
+        "es6": true
+    },
+    "extends": [
+        "eslint:recommended",
+        "plugin:react/recommended",
+        "plugin:@typescript-eslint/recommended",
+        "plugin:jsx-a11y/recommended",
+        "plugin:import/errors",
+        "plugin:import/warnings",
+        "plugin:import/typescript",
+        "plugin:react-hooks/recommended"
+    ],
+    "parser": "@typescript-eslint/parser",
+    "parserOptions": {
+        "ecmaFeatures": {
+            "jsx": true
+        },
+        "project": [
+            "./tsconfig.backend.json",
+            "./tsconfig.frontend.json"
+        ],
+        "ecmaVersion": 2020,
+        "sourceType": "module"
+    },
+    "plugins": [
+        "react",
+        "react-hooks",
+        "@typescript-eslint",
+        "jsx-a11y",
+        "import"
+    ],
+    "settings": {
+        "react": {
+            "version": "detect"
+        },
+        "import/resolver": {
+            "node": {
+                "extensions": [
+                    ".js",
+                    ".jsx",
+                    ".ts",
+                    ".tsx"
+                ]
+            }
+        }
+    },
+    "rules": {
+        "quotes": [
+            "error",
+            "single",
+            {
+                "avoidEscape": true,
+                "allowTemplateLiterals": true
+            }
+        ],
+        "semi": [
+            "error",
+            "always"
+        ],
+        "comma-dangle": [
+            "error",
+            "only-multiline"
+        ],
+        "react/jsx-uses-react": "error",
+        "react/jsx-uses-vars": "error",
+        "react/react-in-jsx-scope": "off",
+        "react/jsx-curly-spacing": [
+            "error",
+            {
+                "when": "never",
+                "children": true
+            }
+        ],
+        "import/order": [
+            "error",
+            {
+                "groups": [
+                    "builtin",
+                    "external",
+                    "internal",
+                    "parent",
+                    "sibling",
+                    "index"
+                ],
+                "newlines-between": "always"
+            }
+        ],
+        "@typescript-eslint/no-unused-vars": [
+            "error"
+        ],
+        "@typescript-eslint/no-explicit-any": "warn",
+        "@typescript-eslint/no-non-null-assertion": "off",
+        "array-element-newline": [
+            "off"
+        ],
+        "@typescript-eslint/array-type": [
+            "off"
+        ],
+        "@typescript-eslint/no-var-requires": "off",
+        "@typescript-eslint/no-unsafe-return": "off",
+        "@typescript-eslint/explicit-module-boundary-types": "off"
+    },
+    "ignorePatterns": [
+        "webpack.config.js",
+        "node_modules/",
+        "build/",
+        "*.min.js",
+        "dist/",
+        "public/",
+        "coverage/"
     ]
-  }
 }

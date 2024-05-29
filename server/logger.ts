@@ -1,6 +1,6 @@
-const winston = require('winston');
-const dotenv = require('dotenv');
 import { Request } from 'express';
+import winston from 'winston';
+import dotenv from 'dotenv';
 
 dotenv.config();
 

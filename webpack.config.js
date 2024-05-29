@@ -17,7 +17,14 @@ function getEntryPoints() {
 
   files.forEach((file) => {
     const filePath = path.join(sourceDirectory, file);
-    if (fs.statSync(filePath).isFile() && (file.endsWith('.js') || file.endsWith('.jsx'))) {
+    if (
+        fs.statSync(filePath).isFile()
+        && (
+            file.endsWith('.js')
+            || file.endsWith('.jsx')
+            || file.endsWith('.ts')
+            || file.endsWith('.tsx')
+        )) {
       const fileName = path.basename(file, path.extname(file));
       entryPoints[fileName] = filePath;
     }
@@ -47,7 +54,7 @@ module.exports = {
   module: {
     rules: [
       {
-        test: /\.(js|jsx)$/,
+        test: /\.(js|jsx|ts|tsx)$/,
         exclude: /node_modules/,
         use: {
           loader: 'babel-loader',

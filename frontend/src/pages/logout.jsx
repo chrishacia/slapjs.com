@@ -1,5 +1,4 @@
-import React, { useEffect } from 'react';
-// eslint-disable-next-line import/no-extraneous-dependencies
+import { useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 
 function Logout() {

@@ -1,9 +1,8 @@
-import { Request, Response } from 'express';
-import { RequestWithSession } from '../../types/server-sessions';
-
+import { Request, Response, NextFunction } from 'express';
 import validator from 'email-validator';
 import xssFilters from 'xss-filters';
 
+import { RequestWithSession } from '../../types/server-sessions';
 import { restful, invalidMethodHandler } from '../../helpers/index';
 import { logger } from '../../logger';
 import { Login, Users } from '../../data/index';
@@ -15,15 +14,13 @@ const user = new Users();
 const closeDb = async () => {
     await login.closeConnection();
     await user.closeConnection();
-}
+};
 /**
  * TODO: Add Failed Login Attempts check, lock account after 5 failed attempts
  * TODO: Add Unknow User check, block IP after 5 failed attempts
  */
 
 const handleLogin = async (req: RequestWithSession, res: Response) => {
-    if (!validateInputs(req, res)) { return; }
-
     try {
         const { email, password } = req.body;
         const safeEmail = xssFilters.inHTMLData(email);
@@ -68,33 +65,32 @@ const handleLogin = async (req: RequestWithSession, res: Response) => {
     }
 };
 
-const validateInputs = (req: Request, res: Response): boolean => {
+const validateInputs = (req: Request, res: Response, next: NextFunction): void => {
     const { email, password } = req.body;
 
     if (!email) {
         res.status(400).json({ data: [], error: 'EMAIL_EMPTY' });
-        return false;
+        return;
     }
 
     if (!validator.validate(email)) {
         res.status(400).json({ data: [], error: 'EMAIL_INVALID' });
-        return false;
+        return;
     }
 
     if (!password) {
         res.status(400).json({ data: [], error: 'PASSWORD_EMPTY' });
-        return false;
+        return;
     }
 
-    return true;
-}
+    next();
+};
 
-//
 export default function loginHandler(req: Request, res: Response) {
     restful(req, res, {
-        post: [validateInputs, handleLogin],
-        get: invalidMethodHandler(req, res, 'GET_LOGIN_HANDLER'),
-        put: invalidMethodHandler(req, res, 'PUT_LOGIN_HANDLER'),
-        delete: invalidMethodHandler(req, res, 'DELETE_LOGIN_HANDLER')
+        post: { handler: handleLogin, middleware: [validateInputs] },
+        get: { handler: (req, res) => invalidMethodHandler(req, res, 'GET_LOGIN_HANDLER') },
+        put: { handler: (req, res) => invalidMethodHandler(req, res, 'PUT_LOGIN_HANDLER') },
+        delete: { handler: (req, res) => invalidMethodHandler(req, res, 'DELETE_LOGIN_HANDLER') },
     });
-};
+}

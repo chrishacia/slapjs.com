@@ -1,44 +1,42 @@
-const Database = require('../database');
-// const { logger } = require('../../logger');
-// const { getUtcDateTime } = require('../../../shared/utils/date.functions');
+import { RowDataPacket } from 'mysql2/promise';
 
-export default class geoLocationModel {
-    #db;
-    #geoTable = 'geolocation';
+import Database from '../database';
+import { GeoLocation, PostalCode } from '../../types/geolocations.types';
 
-    constructor() {
-        this.#db = new Database();
-    }
+export default class GeoLocationModel {
+  #db: Database;
+  #geoTable = 'geolocation';
 
-    async closeConnection(): Promise<void> {
-        await this.#db.close();
-    }
+  constructor() {
+    this.#db = new Database();
+  }
 
-    async getLatAndLongByPostCode(postCode: string): Promise<any[]> {
-        const query = `SELECT latitude, longitude FROM ${this.#geoTable} WHERE postcode = ?`;
-        const params = [postCode];
-        const result = await this.#db.query(query, params);
-        return result;
-    }
+  async closeConnection(): Promise<void> {
+    await this.#db.close();
+  }
 
-    async getPostalCodesWithinRadius(lat: string, long: string, radius: string): Promise<any[]> {
-        const query = `SELECT postcode FROM ${this.#geoTable} WHERE (3959 * acos(cos(radians(?)) * cos(radians(latitude)) * cos(radians(longitude) - radians(?)) + sin(radians(?)) * sin(radians(latitude))) < ?`;
-        const params = [lat, long, lat, radius];
-        const result = await this.#db.query(query, params);
-        return result;
-    }
+  async getLatAndLongByPostCode(postCode: string): Promise<GeoLocation[]> {
+    const query = `SELECT latitude, longitude FROM ${this.#geoTable} WHERE postcode = ?`;
+    const params: [string] = [postCode];
+    const result = await this.#db.query<RowDataPacket[]>(query, params);
+    return result as GeoLocation[];
+  }
 
-    async getPostalCodesWithinRadiusOfPostCode(postCode: string, radius: string): Promise<any[]> {
-        // const query = `SELECT postcode FROM ${this.#geoTable} WHERE (3959 * acos(cos(radians(latitude)) * cos(radians((SELECT latitude FROM ${this.#geoTable} WHERE postcode = ?))) * cos(radians(longitude) - radians((SELECT longitude FROM ${this.#geoTable} WHERE postcode = ?))) + sin(radians(latitude)) * sin(radians((SELECT latitude FROM ${this.#geoTable} WHERE postcode = ?)))) < ?`;
-        const query = `
-            SELECT postal_code
-            FROM geolocation
-            WHERE (3959 * acos(cos(radians(latitude)) * cos(radians((SELECT latitude FROM geolocation WHERE postal_code = ?))) * cos(radians(longitude) - radians((SELECT longitude FROM geolocation WHERE postal_code = ?))) + sin(radians(latitude)) * sin(radians((SELECT latitude FROM geolocation WHERE postal_code = ?))))) < ?
-        `;
-        const params = [postCode, postCode, postCode, radius];
-        const result = await this.#db.query(query, params);
+  async getPostalCodesWithinRadius(lat: string, long: string, radius: string): Promise<PostalCode[]> {
+    const query = `SELECT postcode FROM ${this.#geoTable} WHERE (3959 * acos(cos(radians(?)) * cos(radians(latitude)) * cos(radians(longitude) - radians(?)) + sin(radians(?)) * sin(radians(latitude)))) < ?`;
+    const params: [string, string, string, string] = [lat, long, lat, radius];
+    const result = await this.#db.query<RowDataPacket[]>(query, params);
+    return result as PostalCode[];
+  }
 
-        return result;
-    }
-
+  async getPostalCodesWithinRadiusOfPostCode(postCode: string, radius: string): Promise<PostalCode[]> {
+    const query = `
+      SELECT postcode
+      FROM ${this.#geoTable}
+      WHERE (3959 * acos(cos(radians(latitude)) * cos(radians((SELECT latitude FROM ${this.#geoTable} WHERE postcode = ?))) * cos(radians(longitude) - radians((SELECT longitude FROM ${this.#geoTable} WHERE postcode = ?))) + sin(radians(latitude)) * sin(radians((SELECT latitude FROM ${this.#geoTable} WHERE postcode = ?))))) < ?
+    `;
+    const params: [string, string, string, string] = [postCode, postCode, postCode, radius];
+    const result = await this.#db.query<RowDataPacket[]>(query, params);
+    return result as PostalCode[];
+  }
 }
