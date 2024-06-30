@@ -1,5 +1,5 @@
 {
-  "watch": ["frontend", "server", "server.js"],
+  "watch": ["client", "server", "server.js"],
   "ext": "js,json,ts",
   "ignore": [
     "src/**/*.spec.ts",

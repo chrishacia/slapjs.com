@@ -1,11 +1,12 @@
 import bcrypt from 'bcryptjs';
 import zxcvbn, {ZXCVBNResult} from 'zxcvbn';
-
 import { logger } from '../logger';
+
+const BCRYPT_SALT_ROUNDS = 10;
 
 const hashPassword = async (plainTextPassword: string): Promise<[string, string]> => {
   try {
-    const salt = await bcrypt.genSalt(10);
+    const salt = await bcrypt.genSalt(BCRYPT_SALT_ROUNDS);
     const hashedPassword = await bcrypt.hash(plainTextPassword, salt);
 
     return [salt, hashedPassword];

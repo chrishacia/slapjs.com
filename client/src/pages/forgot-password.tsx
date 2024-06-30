@@ -1,17 +1,23 @@
-import { useState } from 'react';
+import React, { useState, ChangeEvent, FormEvent } from 'react';
 import { createRoot } from 'react-dom/client';
 import validator from 'email-validator';
+import { env } from '../config/env';
+import { useAuth, AuthProvider } from '../context/AuthContext';
 
-import { baseUrl } from '../config/index.js';
-
-
-function ForgotPassword() {
-    const [email, setEmail] = useState('');
+const ForgotPassword: React.FC = () => {
+    const { isAuthenticated } = useAuth();
+    const [email, setEmail] = useState<string>('');
+    const { base_url } = env;
     const vType = 'vfp';
 
-    const handleEmailChange = (e) => setEmail(e.target.value);
+    if (isAuthenticated) {
+        window.location.href = '/dashboard';
+        return null;
+    }
 
-    const handleSubmit = (e) => {
+    const handleEmailChange = (e: ChangeEvent<HTMLInputElement>): void => setEmail(e.target.value);
+
+    const handleSubmit = (e: FormEvent<HTMLFormElement>): void => {
         e.preventDefault();
 
         if (!email) {
@@ -45,7 +51,7 @@ function ForgotPassword() {
     return (
         <main className="form-signin w-100 m-auto centered-box-container">
             <form onSubmit={handleSubmit}>
-                <img className="mb-4 img-fluid" style={{ maxWidth: '350px' }} src={`${baseUrl}/img/temp_logo.png`} alt="" />
+                <img className="mb-4 img-fluid" style={{ maxWidth: '350px' }} src={`${base_url}/img/temp_logo.png`} alt="Logo" />
                 <h1 className="h4 mb-3 fw-normal">Forgot Password</h1>
 
                 <div className="form-floating mb-1">
@@ -76,7 +82,11 @@ function ForgotPassword() {
             </form>
         </main>
     );
-}
+};
 
-const root = createRoot(document.getElementById('root'));
-root.render(<ForgotPassword />);
+const root = createRoot(document.getElementById('root')!);
+root.render(
+    <AuthProvider>
+        <ForgotPassword />
+    </AuthProvider>
+);

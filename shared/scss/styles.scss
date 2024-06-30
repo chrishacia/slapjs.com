@@ -28,3 +28,53 @@ $body-color: #000;
 @import "../../node_modules/bootstrap/scss/variables";
 @import "../../node_modules/bootstrap/scss/mixins";
 @import "../../node_modules/bootstrap/scss/bootstrap";
+
+
+html, body, #root {
+    height: 100%;
+    margin: 0;
+  }
+
+  .d-flex {
+    display: flex !important;
+  }
+
+  .flex-column {
+    flex-direction: column !important;
+  }
+
+  .flex-grow-1 {
+    flex-grow: 1 !important;
+  }
+
+  #sidebar {
+    min-height: 100vh;
+  }
+
+  main {
+    padding-top: 20px;
+  }
+
+  .gradient-text {
+    font-size: 3em;
+    font-weight: bold;
+    background: linear-gradient(90deg, #ff6b6b, #f0e130, #00c6ff);
+    background-size: 200% 100%;
+    background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: gradient-move 5s infinite;
+    -webkit-text-stroke: 2px white; /* Adds white outline */
+    text-shadow: none; /* Removes any shadow */
+}
+
+
+@keyframes gradient-move {
+    0% {
+        background-position: 200% 0;
+    }
+
+    100% {
+        background-position: -200% 0;
+    }
+}

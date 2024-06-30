@@ -3,44 +3,40 @@ import xssFilters from 'xss-filters';
 import zxcvbn from 'zxcvbn';
 import dotenv from 'dotenv';
 import { Request, Response, NextFunction } from 'express';
-
 import { Creds, Users, Login } from '../../data/index';
 import { invalidMethodHandler, restful, responseHandler, translations } from '../../helpers/index';
 import { hashPassword, getUtcDateTime } from '../../utils/index';
 import { logger } from '../../logger';
-
+import { HttpStatusCode } from '../../types/http-status.types';
+import {validationConfigObject} from '../../types/registration.types';
 dotenv.config();
 
-interface validationConfigObject {
-    maxLength: number;
-    minLength: number;
-    regex: RegExp;
-    emptyError: string;
-    tooLongError: string;
-    tooShortError: string;
-    invalidError: string;
-}
+
+const MAX_PASSWORD_LENGTH = 50;
+const MIN_PASSWORD_LENGTH = 8;
+const PASSWORD_MIN_SCORE = 2;
 
 const validateInputs = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     const { email, password, firstName, lastName, dobMonth, dobDay, dobYear } = req.body;
 
-    const validateField = async (field: string, { maxLength, minLength, regex, emptyError, tooLongError, tooShortError, invalidError }: validationConfigObject) => {
+    const validateField = async (field: string, config: validationConfigObject) => {
         if (!field) {
-            responseHandler(req, res, { data: [], error: await translations('en', emptyError), status: 400, method: 'POST', responseHandler: 'validateField' });
-            return;
+            responseHandler(req, res, { data: [], error: await translations('en', config.emptyError), status: HttpStatusCode.BAD_REQUEST, method: 'POST', responseHandler: 'validateField' });
+            return false;
         }
-        if (field.length > maxLength) {
-            responseHandler(req, res, { data: [], error: await translations('en', tooLongError), status: 400, method: 'POST', responseHandler: 'validateField' });
-            return;
+        if (field.length > config.maxLength) {
+            responseHandler(req, res, { data: [], error: await translations('en', config.tooLongError), status: HttpStatusCode.BAD_REQUEST, method: 'POST', responseHandler: 'validateField' });
+            return false;
         }
-        if (field.length < minLength) {
-            responseHandler(req, res, { data: [], error: await translations('en', tooShortError), status: 400, method: 'POST', responseHandler: 'validateField' });
-            return;
+        if (field.length < config.minLength) {
+            responseHandler(req, res, { data: [], error: await translations('en', config.tooShortError), status: HttpStatusCode.BAD_REQUEST, method: 'POST', responseHandler: 'validateField' });
+            return false;
         }
-        if (!regex.test(field)) {
-            responseHandler(req, res, { data: [], error: await translations('en', invalidError), status: 400, method: 'POST', responseHandler: 'validateField' });
-            return;
+        if (!config.regex.test(field)) {
+            responseHandler(req, res, { data: [], error: await translations('en', config.invalidError), status: HttpStatusCode.BAD_REQUEST, method: 'POST', responseHandler: 'validateField' });
+            return false;
         }
+        return true;
     };
 
     const validations = [
@@ -53,32 +49,32 @@ const validateInputs = async (req: Request, res: Response, next: NextFunction): 
     ];
 
     for (const { field, config } of validations) {
-        if (!validateField(field, config)) {
+        if (!await validateField(field, config)) {
             return;
         }
     }
 
     if (!password) {
-        responseHandler(req, res, { data: [], error: await translations('en', 'PASSWORD_EMPTY'), status: 400, method: 'POST', responseHandler: 'validateField' });
+        responseHandler(req, res, { data: [], error: await translations('en', 'PASSWORD_EMPTY'), status: HttpStatusCode.BAD_REQUEST, method: 'POST', responseHandler: 'validateField' });
         return;
     }
-    if (password.length > 50) {
-        responseHandler(req, res, { data: [], error: await translations('en', 'PASSWORD_TOO_LONG'), status: 400, method: 'POST', responseHandler: 'validateField' });
+    if (password.length > MAX_PASSWORD_LENGTH) {
+        responseHandler(req, res, { data: [], error: await translations('en', 'PASSWORD_TOO_LONG'), status: HttpStatusCode.BAD_REQUEST, method: 'POST', responseHandler: 'validateField' });
         return;
     }
-    if (password.length < 8) {
-        responseHandler(req, res, { data: [], error: await translations('en', 'PASSWORD_TOO_SHORT'), status: 400, method: 'POST', responseHandler: 'validateField' });
+    if (password.length < MIN_PASSWORD_LENGTH) {
+        responseHandler(req, res, { data: [], error: await translations('en', 'PASSWORD_TOO_SHORT'), status: HttpStatusCode.BAD_REQUEST, method: 'POST', responseHandler: 'validateField' });
         return;
     }
     if (!/^(?!.*(.)\1{3})(?=.*[a-z])(?=.*[A-Z])(?=.*[\d!@#$%^&*()_+{}[\]:;"'<>,.?/~`|-]).{12,}$/.test(password)) {
-        responseHandler(req, res, { data: [], error: await translations('en', 'PASSWORD_INVALID'), status: 400, method: 'POST', responseHandler: 'validateField' });
+        responseHandler(req, res, { data: [], error: await translations('en', 'PASSWORD_INVALID'), status: HttpStatusCode.BAD_REQUEST, method: 'POST', responseHandler: 'validateField' });
         return;
     }
 
     const { score } = zxcvbn(password);
     const scoreVerb = ['Risky', 'Weak', 'Medium', 'Tough', 'Strongest'];
-    if (score < 2) {
-        responseHandler(req, res, { data: [], error: await translations('en', `PASSWORD_${scoreVerb[score].toUpperCase()}`), status: 400, method: 'POST', responseHandler: 'validateField' });
+    if (score < PASSWORD_MIN_SCORE) {
+        responseHandler(req, res, { data: [], error: await translations('en', `PASSWORD_${scoreVerb[score].toUpperCase()}`), status: HttpStatusCode.BAD_REQUEST, method: 'POST', responseHandler: 'validateField' });
         return;
     }
 
@@ -93,14 +89,15 @@ const handleRegistration = async (req: Request, res: Response) => {
     try {
         const user = new Users();
         if (await user.getUserExistsByEmail(safeEmail)) {
-            responseHandler(req, res, { data: [], error: await translations('en', 'USER_ALREADY_EXISTS'), status: 422, method: 'POST', responseHandler: 'handleRegistration' });
-            throw new Error('USER_ALREADY_EXISTS');
+            responseHandler(req, res, { data: [], error: await translations('en', 'USER_ALREADY_EXISTS'), status: HttpStatusCode.UNPROCESSABLE_ENTITY, method: 'POST', responseHandler: 'handleRegistration' });
+            return;
         }
 
         const hashedPassword = await hashPassword(password).catch(async (err) => {
-            responseHandler(req, res, { data: [], error: await translations('en', 'CREATE_REGISTRATION_FAILED_HASH'), status: 422, method: 'POST', responseHandler: 'handleRegistration' });
-            throw new Error(`CREATE_REGISTRATION_FAILED_HASH: ${err}`);
-        });
+            responseHandler(req, res, { data: [], error: await translations('en', 'CREATE_REGISTRATION_FAILED_HASH'), status: HttpStatusCode.UNPROCESSABLE_ENTITY, method: 'POST', responseHandler: 'handleRegistration' });
+            logger.error(`CREATE_REGISTRATION_FAILED_HASH: ${err}`);
+            return;
+        }) as [string, string];
 
         const login = new Login();
         await login.createLogin({
@@ -109,18 +106,21 @@ const handleRegistration = async (req: Request, res: Response) => {
             pass: hashedPassword[1],
             salt: hashedPassword[0],
         }).catch(async (err) => {
-            responseHandler(req, res, { data: [], error: await translations('en', 'CREATE_REGISTRATION_FAILED_CREATION'), status: 422, method: 'POST', responseHandler: 'handleRegistration' });
-            throw new Error(`CREATE_REGISTRATION_FAILED_CREATION: ${err}`);
+            responseHandler(req, res, { data: [], error: await translations('en', 'CREATE_REGISTRATION_FAILED_CREATION'), status: HttpStatusCode.UNPROCESSABLE_ENTITY, method: 'POST', responseHandler: 'handleRegistration' });
+            logger.error(`CREATE_REGISTRATION_FAILED_CREATION: ${err}`);
+            return;
         });
 
         const userId = await user.getUserIdByEmail(safeEmail).catch(async (err) => {
-            responseHandler(req, res, { data: [], error: await translations('en', 'CREATE_REGISTRATION_FAILED_GET_USER'), status: 422, method: 'POST', responseHandler: 'handleRegistration' });
-            throw new Error(`CREATE_REGISTRATION_FAILED_GET_USER: ${err}`);
-        });
+            responseHandler(req, res, { data: [], error: await translations('en', 'CREATE_REGISTRATION_FAILED_GET_USER'), status: HttpStatusCode.UNPROCESSABLE_ENTITY, method: 'POST', responseHandler: 'handleRegistration' });
+            logger.error(`CREATE_REGISTRATION_FAILED_GET_USER: ${err}`);
+            return;
+        }) as number;
 
         const timestamp = getUtcDateTime();
         const vType = 'reg';
-        const hashy = bcrypt.hashSync(`${userId}${timestamp}${vType}${process.env.SERVER_SECRET_KEY}`, 10);
+        const BCRYPT_SALT_ROUNDS = 10;
+        const hashy = bcrypt.hashSync(`${userId}${timestamp}${vType}${process.env.SERVER_SECRET_KEY}`, BCRYPT_SALT_ROUNDS);
 
         const creds = new Creds();
         await creds.createUserVerification({
@@ -128,19 +128,14 @@ const handleRegistration = async (req: Request, res: Response) => {
             issuedAt: timestamp,
             hashy,
             vType,
-        })
-            .then((verification) => {
-                // TODO: send email
-                console.log(verification);
-                responseHandler(req, res, { data: { userId, email: safeEmail }, error: '', status: 200, method: 'POST', responseHandler: 'handleRegistration' });
-                return;
-            })
-            .catch(async (err) => {
-                logger.error(err);
-                responseHandler(req, res, { data: [], error: await translations('en', 'CREATE_VERIFICATION_FAILED'), status: 422, method: 'POST', responseHandler: 'handleRegistration' });
-                return;
-            });
-
+        }).then((verification) => {
+            // TODO: send email
+            console.log(verification);
+            responseHandler(req, res, { data: { userId, email: safeEmail }, error: '', status: HttpStatusCode.OK, method: 'POST', responseHandler: 'handleRegistration' });
+        }).catch(async (err) => {
+            logger.error(err);
+            responseHandler(req, res, { data: [], error: await translations('en', 'CREATE_VERIFICATION_FAILED'), status: HttpStatusCode.UNPROCESSABLE_ENTITY, method: 'POST', responseHandler: 'handleRegistration' });
+        });
 
         await user.createUserInformation({
             id: userId,
@@ -154,7 +149,6 @@ const handleRegistration = async (req: Request, res: Response) => {
     } catch (err) {
         logger.error(err);
         responseHandler(req, res, { data: [], error: await translations('en', 'CREATE_INFORMATION_FAILED'), status: 500, method: 'POST', responseHandler: 'handleRegistration' });
-        return;
     }
 };
 

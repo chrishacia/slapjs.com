@@ -22,8 +22,8 @@ const logger = winston.createLogger({
   ],
 });
 
-const invalidUseLogger = (routeHandlerName: string, routeHandlerMethod: string, req: Request) => {
-  const { userId } = req.body ? req.body : 'Undetected';
+const invalidUseLogger = (routeHandlerName: string, routeHandlerMethod: string, req: Request): void => {
+  const userId = req.body?.userId || 'Undetected';
   const clientIp = req.ip || req.connection.remoteAddress; // IP of the client
   const userAgent = req.get('User-Agent'); // User agent of the client
   const timestamp = new Date().toISOString();

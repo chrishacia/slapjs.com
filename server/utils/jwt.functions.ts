@@ -1,6 +1,7 @@
 import dotenv from 'dotenv';
 import jwt, { SignOptions, VerifyOptions, JwtPayload } from 'jsonwebtoken';
 import { Request, Response, NextFunction } from 'express';
+import {HttpStatusCode} from '../types/http-status.types';
 
 dotenv.config();
 
@@ -25,13 +26,13 @@ const getJwtTokenDetails = (req: RequestWithUser, res: Response, next: NextFunct
   };
 
   if (!token) {
-    res.status(401).json({ data: [], error: 'JWT_MISSING' });
+    res.status(HttpStatusCode.UNAUTHORIZED).json({ data: [], error: 'JWT_MISSING' });
     return;
   }
 
   jwt.verify(token, secretKey, options, (err, decoded) => {
     if (err) {
-      res.status(401).json({ data: [], error: 'JWT_INVALID' });
+      res.status(HttpStatusCode.UNAUTHORIZED).json({ data: [], error: 'JWT_INVALID' });
       return;
     }
 

@@ -1,12 +1,27 @@
-import { useState } from 'react';
+import React, { useState, ChangeEvent, FormEvent } from 'react';
 import { createRoot } from 'react-dom/client';
 import validator from 'email-validator';
-
-import { baseUrl } from '../config/index.js';
+import { env } from '../config/env';
+import { useAuth, AuthProvider } from '../context/AuthContext';
 
 // TODO: Password Strength Meter and Password Requirements
-function Register() {
-    const [formData, setFormData] = useState({
+
+interface FormData {
+    email: string;
+    password: string;
+    firstName: string;
+    lastName: string;
+    confirmPassword: string;
+    dobMonth: string;
+    dobDay: string;
+    dobYear: string;
+}
+
+const Register: React.FC = () => {
+    const { isAuthenticated } = useAuth();
+    const { base_url } = env;
+
+    const [formData, setFormData] = useState<FormData>({
         email: '',
         password: '',
         firstName: '',
@@ -17,7 +32,12 @@ function Register() {
         dobYear: '',
     });
 
-    const handleChange = (e) => {
+    if (isAuthenticated) {
+        window.location.href = '/dashboard';
+        return null;
+    }
+
+    const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>): void => {
         const { id, value } = e.target;
         setFormData((prevData) => ({ ...prevData, [id]: value }));
     };
@@ -29,14 +49,17 @@ function Register() {
     const currentYear = new Date().getFullYear();
     const years = Array.from({ length: 100 }, (_, i) => currentYear - i);
 
-    const isDobLessThan18 = () => {
+    const LEGAL_AGE = 18;
+    const BASE_YEAR = 1970;
+
+    const isDobLessThan18 = (): boolean => {
         const dob = new Date(`${dobMonth}/${dobDay}/${dobYear}`);
         const ageDiff = Date.now() - dob.getTime();
-        const age = new Date(ageDiff).getUTCFullYear() - 1970;
-        return age < 18;
+        const age = new Date(ageDiff).getUTCFullYear() - BASE_YEAR;
+        return age < LEGAL_AGE;
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = (e: FormEvent<HTMLFormElement>): void => {
         e.preventDefault();
 
         if (isDobLessThan18()) {
@@ -79,7 +102,7 @@ function Register() {
     return (
         <main className="form-signin w-100 m-auto centered-box-container">
             <form onSubmit={handleSubmit}>
-                <img className="mb-4 img-fluid" style={{ maxWidth: '350px' }} src={`${baseUrl}/img/temp_logo.png`} alt="" />
+                <img className="mb-4 img-fluid" style={{ maxWidth: '350px' }} src={`${base_url}/img/temp_logo.png`} alt="Logo" />
                 <h1 className="h4 mb-3 fw-normal">Please sign up</h1>
 
                 <div className="d-flex flex-row mb-1">
@@ -98,7 +121,7 @@ function Register() {
                         <div className="form-floating">
                             <select className="form-select" id="dobMonth" value={dobMonth} onChange={handleChange}>
                                 <option value="">Month</option>
-                                {months.map((v, i) => <option value={v} key={`month_${i}`}>{v}</option>)}
+                                {months.map((v) => <option value={v} key={`month_${v}`}>{v}</option>)}
                             </select>
                             <label htmlFor="dobMonth">Month</label>
                         </div>
@@ -107,7 +130,7 @@ function Register() {
                         <div className="form-floating">
                             <select className="form-select" id="dobDay" value={dobDay} onChange={handleChange}>
                                 <option value="">Day</option>
-                                {days.map((v, i) => <option value={v} key={`day_${i}`}>{v}</option>)}
+                                {days.map((v) => <option value={v} key={`day_${v}`}>{v}</option>)}
                             </select>
                             <label htmlFor="dobDay">Day</label>
                         </div>
@@ -116,7 +139,7 @@ function Register() {
                         <div className="form-floating">
                             <select className="form-select" id="dobYear" value={dobYear} onChange={handleChange}>
                                 <option value="">Year</option>
-                                {years.map((v, i) => <option value={v} key={`year_${i}`}>{v}</option>)}
+                                {years.map((v) => <option value={v} key={`year_${v}`}>{v}</option>)}
                             </select>
                             <label htmlFor="dobYear">Year</label>
                         </div>
@@ -143,7 +166,11 @@ function Register() {
             </form>
         </main>
     );
-}
+};
 
-const root = createRoot(document.getElementById('root'));
-root.render(<Register />);
+const root = createRoot(document.getElementById('root')!);
+root.render(
+    <AuthProvider>
+        <Register />
+    </AuthProvider>
+);

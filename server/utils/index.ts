@@ -1,5 +1,4 @@
 import { getUtcDateTime } from '../../shared/utils/date.functions';
-
 import { getJwtTokenDetails, generateJwtToken, verifyJwtToken } from './jwt.functions';
 import {
     checkStrengthScore,

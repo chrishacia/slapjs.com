@@ -2,9 +2,9 @@
     "env": {
         "browser": true,
         "es2021": true,
-        "node": true,
+        "es6": true,
         "jest": true,
-        "es6": true
+        "node": true
     },
     "extends": [
         "eslint:recommended",
@@ -23,7 +23,7 @@
         },
         "project": [
             "./tsconfig.backend.json",
-            "./tsconfig.frontend.json"
+            "./tsconfig.client.json"
         ],
         "ecmaVersion": 2020,
         "sourceType": "module"
@@ -51,6 +51,12 @@
         }
     },
     "rules": {
+        "array-bracket-newline": ["off", { "minItems": 0 }],
+        "array-bracket-spacing": [
+            "error",
+            "never"
+        ],
+        "no-magic-numbers": ["error", { "ignore": [0, 1] }],
         "quotes": [
             "error",
             "single",
@@ -88,7 +94,7 @@
                     "sibling",
                     "index"
                 ],
-                "newlines-between": "always"
+                "newlines-between": "never"
             }
         ],
         "@typescript-eslint/no-unused-vars": [
@@ -97,7 +103,8 @@
         "@typescript-eslint/no-explicit-any": "warn",
         "@typescript-eslint/no-non-null-assertion": "off",
         "array-element-newline": [
-            "off"
+            "off",
+            { "minItems": 0 }
         ],
         "@typescript-eslint/array-type": [
             "off"

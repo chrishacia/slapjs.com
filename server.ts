@@ -1,80 +1,73 @@
 import path from 'path';
-
 import bodyParser from 'body-parser';
 import compression from 'compression';
-import cors, { CorsOptions, CorsOptionsDelegate } from 'cors';
+import cors from 'cors';
 import dotenv from 'dotenv';
-import express, { Request, Express } from 'express';
+import express, { Request, Response, Express } from 'express';
 import { engine } from 'express-handlebars';
 import session from 'express-session';
-
-import routes from './server/routes'; // Ensure this is the correct path
+import routes from './server/routes';
+import { PORT,
+    MAX_AGE_IN_MS,
+    SESSION_SECRET,
+    VIEWS_PATH,
+    STATIC_PATH,
+    IS_PRODUCTION
+} from './server/constants';
 
 dotenv.config();
 const app: Express = express();
-
-const PORT = process.env.SERVER_PORT;
-
-const whitelist = (process.env.SERVER_WHITELIST ?? '').split(',');
-const domainExistsOnWhitelist = (req: Request) => whitelist.indexOf(req.header('Origin') as string) !== -1;
-
-// enable CORS
-const corsOptionsDelegate: CorsOptionsDelegate<Request> = (req: Request, callback: (err: Error | null, options?: CorsOptions) => void) => {
-    let corsOptions: CorsOptions;
-    if (domainExistsOnWhitelist(req)) {
-        // Enable CORS for this request
-        corsOptions = { origin: true };
-    } else {
-        // Disable CORS for this request
-        corsOptions = { origin: false };
-    }
-    callback(null, corsOptions);
-};
 
 // Express configuration
 app.engine('hbs', engine({
   defaultLayout: 'main',
   extname: '.hbs',
-  layoutsDir: path.join(__dirname, 'server/views/layouts'),
-  partialsDir: path.join(__dirname, 'server/views/partials'),
+  layoutsDir: path.join(VIEWS_PATH, 'layouts'),
+  partialsDir: path.join(VIEWS_PATH, 'partials'),
 }));
 
 app.use(bodyParser.json());
-
 app.use(session({
-  secret: process.env.SERVER_SESSION_SECRET!,
+  secret: SESSION_SECRET,
   resave: false,
   rolling: true,
   saveUninitialized: true,
-  cookie: { secure: process.env.SERVER_ENV === 'production', maxAge: 3600000 * 24 * 3 },
+  cookie: { secure: IS_PRODUCTION, maxAge: MAX_AGE_IN_MS },
 }));
 
-app.set('views', path.join(__dirname, 'server/views'));
+app.set('views', VIEWS_PATH);
 app.set('view engine', '.hbs');
 
 app.use(compression());
-app.use(cors(corsOptionsDelegate));
+app.use(cors({
+  origin: '*'
+}));
+
+app.use((req: Request, res: Response, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+  next();
+});
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Static files
-app.use('/img', express.static(`${__dirname}/shared/images`));
-app.use('/css', express.static(`${__dirname}/node_modules/bootstrap/dist/css`));
-app.use('/css', express.static(`${__dirname}/node_modules/bootstrap-icons/font/fonts`));
-app.use('/css', express.static(`${__dirname}/node_modules/@fortawesome/fontawesome-free/css`));
-app.use('/css', express.static(`${__dirname}/shared/styles`));
-app.use('/dist', express.static(`${__dirname}/public/dist`));
-app.use('/js', express.static(`${__dirname}/node_modules/bootstrap/dist/js`));
-app.use('/js', express.static(`${__dirname}/node_modules/@fortawesome/fontawesome-free/js`));
+app.use('/img', express.static(path.join(__dirname, 'shared/images')));
+app.use('/css', express.static(path.join(__dirname, 'node_modules/bootstrap/dist/css')));
+app.use('/css', express.static(path.join(__dirname, 'node_modules/bootstrap-icons/font/fonts')));
+app.use('/css', express.static(path.join(__dirname, 'node_modules/@fortawesome/fontawesome-free/css')));
+app.use('/css', express.static(path.join(__dirname, 'shared/styles')));
+app.use('/dist', express.static(path.join(__dirname, 'public/dist')));
+app.use('/js', express.static(path.join(__dirname, 'node_modules/bootstrap/dist/js')));
+app.use('/js', express.static(path.join(__dirname, 'node_modules/@fortawesome/fontawesome-free/js')));
 
-app.use('/', express.static(path.join(__dirname, 'public'), { maxAge: 31557600000 }));
+app.use('/', express.static(STATIC_PATH, { maxAge: 31557600000 }));
 
 // Routes
-app.use(routes); // Ensure routes is a valid middleware function
+app.use(routes);
 
 app.listen(PORT, () => {
-  if (process.env.SERVER_ENV !== 'production') {
-    // eslint-disable-next-line no-console
-    console.log(`Server running on port ${PORT}`);
+  if (!IS_PRODUCTION) {
+    console.log(`Server running on port http://localhost:${PORT}`);
   }
 });

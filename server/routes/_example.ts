@@ -1,5 +1,4 @@
 import { Request, Response } from 'express';
-
 import { invalidMethodHandler, restful } from '../helpers/index';
 
 // const handleForgotPassword1 = async (req, res) => {

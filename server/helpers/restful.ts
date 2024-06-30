@@ -1,8 +1,7 @@
 import { Request, Response } from 'express';
-
+import { HttpStatusCode } from '../types/http-status.types';
 import { logger } from '../logger';
 import { Handlers, ErrorResponse } from '../types/restful.types';
-
 import { responseHandler } from './restful.response';
 
 /**
@@ -17,7 +16,7 @@ const handleCatchError = (err: unknown, req: Request, res: Response) => {
     const errorResponse: ErrorResponse = {
       data: [],
       error: err.message || 'Internal Server Error: Middleware Error',
-      status: res.statusCode || 500,
+      status: res.statusCode || HttpStatusCode.INTERNAL_SERVER_ERROR,
       method: req.method,
       responseHandler: 'executeMiddleware',
     };
@@ -29,7 +28,7 @@ const handleCatchError = (err: unknown, req: Request, res: Response) => {
     const errorResponse: ErrorResponse = {
       data: [],
       error: 'Internal Server Error: Middleware Error',
-      status: res.statusCode || 500,
+      status: res.statusCode || HttpStatusCode.INTERNAL_SERVER_ERROR,
       method: req.method,
       responseHandler: 'executeMiddleware',
     };
@@ -47,7 +46,7 @@ export const restful = async (req: Request, res: Response, handlers: Handlers) =
   // Check if the method is supported
   if (!(method in handlers)) {
     res.set('Allow', Object.keys(handlers).join(', ').toUpperCase());
-    res.sendStatus(405);
+    res.sendStatus(HttpStatusCode.METHOD_NOT_ALLOWED);
     logger.error(`Error Log: Method ${req.method} not allowed for ${req.originalUrl}`);
     return;
   }

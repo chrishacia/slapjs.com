@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import validator from 'email-validator';
 import xssFilters from 'xss-filters';
-
+import {HttpStatusCode} from '../../types/http-status.types';
 import { RequestWithSession } from '../../types/server-sessions';
 import { restful, invalidMethodHandler } from '../../helpers/index';
 import { logger } from '../../logger';
@@ -27,25 +27,25 @@ const handleLogin = async (req: RequestWithSession, res: Response) => {
         const safePassword = xssFilters.inHTMLData(password);
 
         if (!await user.getUserExistsByEmail(safeEmail)) {
-            res.status(400).json({ data: [], error: 'AUTHENTICATION_FAILED' });
-            throw new Error('AUTHENTICATION_FAILED');
+            res.status(HttpStatusCode.BAD_REQUEST).json({ data: [], error: 'AUTHENTICATION_FAILED', error_no: 1 });
+            return;
         }
 
         const userId = await user.getUserIdByEmail(safeEmail);
         const creds = await login.getPassDetailsForComparison(safeEmail);
 
         if (creds.length === 0) {
-            res.status(400).json({ data: [], error: 'AUTHENTICATION_FAILED' });
-            throw new Error('AUTHENTICATION_FAILED');
+            res.status(HttpStatusCode.BAD_REQUEST).json({ data: [], error: 'AUTHENTICATION_FAILED', error_no: 2});
+            return;
         }
 
         if (!await verifyPassword(safePassword, creds[0].salt, creds[0].pass)) {
-            res.status(400).json({ data: [], error: 'AUTHENTICATION_FAILED' });
-            throw new Error('AUTHENTICATION_FAILED');
+            res.status(HttpStatusCode.BAD_REQUEST).json({ data: [], error: 'AUTHENTICATION_FAILED', error_no: 3});
+            return;
         }
 
         const session = {
-            id: userId,
+            userId: userId,
             email: email,
             create_ts: getUtcDateTime(),
         };
@@ -55,31 +55,34 @@ const handleLogin = async (req: RequestWithSession, res: Response) => {
 
         req.session.userId = JSON.stringify(session);
         req.session.email = email;
-        res.status(200).json({ data: { ...session, token, refreshToken }, error: '' });
+        res.status(HttpStatusCode.OK).json({ data: { ...session, token, refreshToken }, error: '' });
 
     } catch (err) {
         logger.error(err);
-        res.status(400).json({ data: [], error: 'AUTHENTICATION_FAILED' });
+        if (!res.headersSent) {
+            res.status(HttpStatusCode.BAD_REQUEST).json({ data: [], error: 'AUTHENTICATION_FAILED', error_no: 4});
+        }
     } finally {
         closeDb();
     }
 };
 
+
 const validateInputs = (req: Request, res: Response, next: NextFunction): void => {
     const { email, password } = req.body;
 
     if (!email) {
-        res.status(400).json({ data: [], error: 'EMAIL_EMPTY' });
+        res.status(HttpStatusCode.BAD_REQUEST).json({ data: [], error: 'EMAIL_EMPTY' });
         return;
     }
 
     if (!validator.validate(email)) {
-        res.status(400).json({ data: [], error: 'EMAIL_INVALID' });
+        res.status(HttpStatusCode.BAD_REQUEST).json({ data: [], error: 'EMAIL_INVALID' });
         return;
     }
 
     if (!password) {
-        res.status(400).json({ data: [], error: 'PASSWORD_EMPTY' });
+        res.status(HttpStatusCode.BAD_REQUEST).json({ data: [], error: 'PASSWORD_EMPTY' });
         return;
     }
 

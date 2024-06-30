@@ -1,27 +1,41 @@
-import React, { useState } from 'react';
+import React, { useState, ChangeEvent, FormEvent } from 'react';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { createRoot } from 'react-dom/client';
 import validator from 'email-validator';
+import { env } from '../config/env';
+import logger from '../utils/logger';
+import { useAuth, AuthProvider } from '../context/AuthContext';
 
-import { baseUrl } from '../config/index.js';
+interface FormData {
+    email: string;
+    password: string;
+    rememberMe: boolean;
+}
 
+const Login: React.FC = () => {
+    const { isAuthenticated } = useAuth();
 
-function Login() {
-    const [formData, setFormData] = useState({
+    const { base_url } = env;
+    const [formData, setFormData] = useState<FormData>({
         email: '',
         password: '',
         rememberMe: false,
     });
 
-    const handleChange = (e) => {
-        const { name, value, type, checked } = e.target;
+    if (isAuthenticated) {
+        window.location.href = '/dashboard';
+        return null;
+    }
+
+    const handleChange = (e: ChangeEvent<HTMLInputElement>): void => {
+        const { id, value, type, checked } = e.target;
         setFormData({
             ...formData,
-            [name]: type === 'checkbox' ? checked : value,
+            [id]: type === 'checkbox' ? checked : value,
         });
     };
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
         e.preventDefault();
         const { email, password, rememberMe } = formData;
 
@@ -46,47 +60,46 @@ function Login() {
 
             const res = await response.json();
 
-            if (!res.error) {
+            if (!res.data.error) {
                 localStorage.setItem('userId', res.data.id);
                 localStorage.setItem('token', res.data.token);
                 localStorage.setItem('refreshToken', res.data.refreshToken);
                 window.location.href = '/dashboard';
             } else {
-                alert(res.data.error);
+                alert(res.error);
             }
         } catch (error) {
-            alert('An error occurred while logging in');
-            console.error(error);
+            logger.error(error);
         }
     };
 
     return (
         <main className="form-signin w-100 m-auto centered-box-container">
             <form onSubmit={handleSubmit}>
-                <img className="mb-4 img-fluid" style={{maxWidth: '350px'}} src={`${baseUrl}/img/temp_logo.png`} alt="" />
+                <img className="mb-4 img-fluid" style={{ maxWidth: '350px' }} src={`${base_url}/img/temp_logo.png`} alt="Logo" />
                 <h1 className="h4 mb-3 fw-normal">Please sign in</h1>
 
                 <div className="form-floating mb-1">
                     <input
                         type="email"
                         className="form-control"
-                        id="floatingInput"
+                        id="email"
                         placeholder="name@example.com"
                         value={formData.email}
                         onChange={handleChange}
                     />
-                    <label htmlFor="floatingInput">Email address</label>
+                    <label htmlFor="email">Email address</label>
                 </div>
                 <div className="form-floating mb-1">
                     <input
                         type="password"
                         className="form-control"
-                        id="floatingPassword"
+                        id="password"
                         placeholder="Password"
                         value={formData.password}
                         onChange={handleChange}
                     />
-                    <label htmlFor="floatingPassword">Password</label>
+                    <label htmlFor="password">Password</label>
                 </div>
 
                 <div className="form-check text-start my-3">
@@ -94,11 +107,11 @@ function Login() {
                         className="form-check-input"
                         type="checkbox"
                         value="remember-me"
-                        id="flexCheckDefault"
+                        id="rememberMe"
                         checked={formData.rememberMe}
                         onChange={handleChange}
                     />
-                    <label className="form-check-label" htmlFor="flexCheckDefault">
+                    <label className="form-check-label" htmlFor="rememberMe">
                         Remember me
                     </label>
                 </div>
@@ -110,7 +123,11 @@ function Login() {
             </form>
         </main>
     );
-}
+};
 
-const root = createRoot(document.getElementById('root'));
-root.render(<Login />);
+const root = createRoot(document.getElementById('root')!);
+root.render(
+    <AuthProvider>
+        <Login />
+    </AuthProvider>
+);

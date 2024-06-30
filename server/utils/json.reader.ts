@@ -1,8 +1,8 @@
 import fs from 'fs';
 import path from 'path';
-
 import { logger } from '../logger';
 
+const JSON_WHITESPACE = 2;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const jsonReader = (jsonFile: string): Promise<any> => {
     // Read the JSON file asynchronously
@@ -32,7 +32,7 @@ export const jsonWriter = (jsonFile: string, data: object): Promise<void> => {
     const jsonFilePath = path.join(__dirname, jsonFile);
 
     return new Promise((resolve, reject) => {
-        fs.writeFile(jsonFilePath, JSON.stringify(data, null, 2), 'utf8', (err) => {
+        fs.writeFile(jsonFilePath, JSON.stringify(data, null, JSON_WHITESPACE), 'utf8', (err) => {
             if (err) {
                 logger.error('Error writing to the file:', err);
                 reject(err);

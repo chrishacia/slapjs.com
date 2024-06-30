@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
-
 import { restful, invalidMethodHandler } from '../../helpers';
+import {HttpStatusCode} from '../../types/http-status.types';
 import { logger } from '../../logger';
 import { JwtModel } from '../../data';
 import { verifyJwtToken, generateJwtToken, getUtcDateTime } from '../../utils';
@@ -10,14 +10,14 @@ const handleJWTRefresh = async (req: Request, res: Response) => {
         const { refreshToken, userId } = req.body;
 
         if (!refreshToken) {
-            res.status(401).json({ data: [], error: 'INVALID_REFRESH_TOKEN_MISSING', 'number': 1 });
+            res.status(HttpStatusCode.UNAUTHORIZED).json({ data: [], error: 'INVALID_REFRESH_TOKEN_MISSING', 'number': 1 });
             return;
         }
 
         const jwtToken = verifyJwtToken(refreshToken);
 
         if (!jwtToken) {
-            res.status(403).json({ data: [], error: 'INVALID_REFRESH_TOKEN', 'number': 2 });
+            res.status(HttpStatusCode.FORBIDDEN).json({ data: [], error: 'INVALID_REFRESH_TOKEN', 'number': 2 });
             return;
         }
 
@@ -25,7 +25,7 @@ const handleJWTRefresh = async (req: Request, res: Response) => {
         const token = jwtModel.getRefreshToken(jwtToken.userId);
 
         if (token !== refreshToken) {
-            res.status(403).json({ data: [], error: 'INVALID_REFRESH_TOKEN_MISMATCH', 'number': 3 });
+            res.status(HttpStatusCode.FORBIDDEN).json({ data: [], error: 'INVALID_REFRESH_TOKEN_MISMATCH', 'number': 3 });
             jwtModel.closeConnection();
             return;
         }
@@ -42,10 +42,10 @@ const handleJWTRefresh = async (req: Request, res: Response) => {
         jwtModel.updateRefreshToken(jwtToken.userId, { refreshToken: newRefreshToken });
         jwtModel.closeConnection();
 
-        res.status(200).json({ data: { userId, accessToken, refreshToken: newRefreshToken }, error: '' });
+        res.status(HttpStatusCode.OK).json({ data: { userId, accessToken, refreshToken: newRefreshToken }, error: '' });
     } catch (err) {
         logger.error(err);
-        res.status(500).json({ data: [], error: 'JWT_REFRESH_FAILED' });
+        res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json({ data: [], error: 'JWT_REFRESH_FAILED' });
     }
 };
 
