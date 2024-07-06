@@ -12,7 +12,7 @@ import logger from '../utils/logger';
 import { useAuth } from '../context/AuthContext';
 import { User, UserContextProps } from '../types/UserContext.types';
 
-export const UserContext = createContext<UserContextProps | undefined>(undefined);
+export const UserContext = createContext<UserContextProps>({} as UserContextProps);
 
 export const useUser = (): UserContextProps => {
   const context = useContext(UserContext);

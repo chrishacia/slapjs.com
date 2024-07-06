@@ -2,9 +2,9 @@ import path from 'path';
 import express, { Request, Response, NextFunction } from 'express';
 import swaggerUi from 'swagger-ui-express';
 import YAML from 'yamljs';
-import { STATIC_PATH } from './constants';
 import apiRoutes from './apiRoutes';
 import { RequestWithSession } from './types/server-sessions';
+import adminRoutes from './adminRoutes';
 
 const router = express.Router();
 
@@ -31,12 +31,15 @@ const authMiddleware = {
 // Swagger documentation route
 router.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
+// adming routes
+router.use('/admin', adminRoutes);
+
 // API routes
 router.use('/api', apiRoutes);
 
 // Define a function to streamline the client route registration
 const clientRoutes = [
-  { path: '/', filePath: path.join(STATIC_PATH, 'index.html') },
+  { path: '/', filePath: path.join(__dirname, '..', 'public', 'index.html') },
   { path: '/home', view: 'home', title: 'Home Page' },
   { path: '/login', view: 'react', layout: 'react', title: 'Login', js: ['/dist/login.bundle.js'], middleware: authMiddleware.isLoggedIn },
   { path: '/logout', view: 'react', layout: 'react', title: 'Login', js: ['/dist/logout.bundle.js'] },
@@ -48,7 +51,8 @@ const clientRoutes = [
   { path: '/profile', view: 'react', layout: 'react', title: 'Profile', js: ['/dist/profile.bundle.js'], middleware: authMiddleware.isNotLoggedIn },
   { path: '/settings', view: 'react', layout: 'react', title: 'Settings', js: ['/dist/settings.bundle.js'], middleware: authMiddleware.isNotLoggedIn },
   { path: '/chat', view: 'react', layout: 'react', title: 'Chat', js: ['/dist/chat.bundle.js'], middleware: authMiddleware.isNotLoggedIn },
-  { path: '/messages', view: 'react', layout: 'react', title: 'Messages', js: ['/dist/messages.bundle.js'], middleware: authMiddleware.isNotLoggedIn }
+  { path: '/message/:msgId', view: 'react', layout: 'react', title: 'Messages', js: ['/dist/message.bundle.js'], middleware: authMiddleware.isNotLoggedIn },
+  { path: '/messages/:boxType?', view: 'react', layout: 'react', title: 'Messages', js: ['/dist/messages.bundle.js'], middleware: authMiddleware.isNotLoggedIn }
 ];
 
 // Register client routes
@@ -75,7 +79,7 @@ clientRoutes.forEach(route => {
 
 // Catch-all route
 router.get('*', (req, res) => {
-  res.sendFile(path.join(STATIC_PATH, 'index.html'));
+  res.sendFile(path.join(__dirname, '..', 'public', 'index_404.html'));
 });
 
 export default router;

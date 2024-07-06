@@ -18,9 +18,18 @@ const logger = winston.createLogger({
   transports: [
     new winston.transports.File({ filename: 'error.log', level: 'error' }),
     new winston.transports.File({ filename: 'combined.log' }),
-    new winston.transports.Console(),
   ],
 });
+
+if (process.env.SERVER_ENV !== 'production') {
+  logger.add(new winston.transports.Console({
+    format: winston.format.combine(
+      winston.format.colorize(),
+      winston.format.simple(),
+      winston.format.printf(info => `${info.timestamp} ${info.level}: ${info.message}`)
+    ),
+  }));
+}
 
 const invalidUseLogger = (routeHandlerName: string, routeHandlerMethod: string, req: Request): void => {
   const userId = req.body?.userId || 'Undetected';
@@ -31,12 +40,6 @@ const invalidUseLogger = (routeHandlerName: string, routeHandlerMethod: string, 
   const message = `UserID: ${userId}, IP: ${clientIp}, Timestamp: ${timestamp}, User-Agent: ${userAgent} --- Invalid use of ${routeHandlerName} in ${routeHandlerMethod} method`;
   logger.error(message);
 };
-
-if (process.env.SERVER_ENV !== 'production') {
-  logger.add(new winston.transports.Console({
-    format: winston.format.simple(),
-  }));
-}
 
 export {
   logger,

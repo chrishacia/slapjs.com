@@ -4,7 +4,7 @@ import { env } from '../config/env';
 import logger from '../utils/logger';
 import { AuthContextProps, AuthProviderProps } from '../types/AuthContext.types';
 
-export const AuthContext = createContext<AuthContextProps | undefined>(undefined);
+export const AuthContext = createContext<AuthContextProps>({} as AuthContextProps);
 
 export const useAuth = (): AuthContextProps => {
     const context = useContext(AuthContext);
@@ -157,11 +157,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }, [validateToken]);
 
     useEffect(() => {
+        logger.log('ensureAuth 1');
         ensureAuth();
     }, [ensureAuth]);
 
     useEffect(() => {
         const interval = setInterval(() => {
+            logger.log('ensureAuth 2');
             ensureAuth();
         }, LOGIN_CHECK_INTERVAL);
 

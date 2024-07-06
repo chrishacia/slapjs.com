@@ -1,11 +1,17 @@
 import React, { ReactNode, Context, createContext, FC } from 'react';
+// import { env } from '../config/env';
 
-interface ConfigContextProps {
-  // Define the shape of your config object here
-    [key: string]: unknown;
+export interface ConfigContextProps {
+    debug: boolean;
+    environment: string;
+    base_url: string;
+    api_url: string;
+    img_url: string;
+    discord_server_id: string;
+    discord_channel_id: string;
 }
 
-export const ConfigContext: Context<ConfigContextProps | undefined> = createContext<ConfigContextProps | undefined>(undefined);
+export const ConfigContext: Context<ConfigContextProps> = createContext<ConfigContextProps>({} as ConfigContextProps);
 
 interface ConfigProviderProps {
   children: ReactNode;

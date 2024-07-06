@@ -11,3 +11,4 @@ export const WHITELIST = (process.env.SERVER_WHITELIST ?? '').split(',');
 export const VIEWS_PATH = path.join(__dirname, '..', 'server', 'views');
 export const STATIC_PATH = path.join(__dirname, 'public');
 export const IS_PRODUCTION = ENV === 'production';
+export const IS_DEVELOPMENT = ENV === 'development';

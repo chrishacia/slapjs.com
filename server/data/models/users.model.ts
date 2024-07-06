@@ -1,5 +1,4 @@
 import { RowDataPacket, OkPacket } from 'mysql2';
-
 import Database from '../database';
 import { logger } from '../../logger';
 

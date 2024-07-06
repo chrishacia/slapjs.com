@@ -7,7 +7,9 @@ import express, { Request, Response, Express } from 'express';
 import { engine } from 'express-handlebars';
 import session from 'express-session';
 import routes from './server/routes';
-import { PORT,
+import { globalRateLimiter } from './server/rateLimit';
+import {
+    PORT,
     MAX_AGE_IN_MS,
     SESSION_SECRET,
     VIEWS_PATH,
@@ -50,6 +52,10 @@ app.use((req: Request, res: Response, next) => {
 });
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Apply rate limiter to all requests
+app.use(globalRateLimiter);
+
 
 // Static files
 app.use('/img', express.static(path.join(__dirname, 'shared/images')));
